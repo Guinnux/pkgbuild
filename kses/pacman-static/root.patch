@@ -1,0 +1,17 @@
+--- a/src/pacman/pacman.c	2015-07-31 11:02:06.431758593 +0200
++++ b/src/pacman/pacman.c	2015-07-31 11:03:15.931475632 +0200
+@@ -1167,10 +1167,10 @@
+ 	}
+ 
+ 	/* check if we have sufficient permission for the requested operation */
+-	if(myuid > 0 && needs_root()) {
+-		pm_printf(ALPM_LOG_ERROR, _("you cannot perform this operation unless you are root.\n"));
+-		cleanup(EXIT_FAILURE);
+-	}
++//	if(myuid > 0 && needs_root()) {
++//		pm_printf(ALPM_LOG_ERROR, _("you cannot perform this operation unless you are root.\n"));
++//		cleanup(EXIT_FAILURE);
++//	}
+ 
+ 	if(config->verbose > 0) {
+ 		alpm_list_t *j;
