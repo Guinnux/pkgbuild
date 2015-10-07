@@ -1,0 +1,37 @@
+# This pretty much the normal busybox build 
+# but scaled down to fit in the rescue file system
+
+pkgname=busybox-rescue
+pkgver=1.21.1
+pkgrel=1
+pkgdesc="The Swiss Army knife of embedded systems - scaled down for the Guinnux rescue filesystem"
+arch=('arm')
+url="http://www.busybox.net/"
+license=('GPL')
+packager="John Eigelaar <john@kses.net>"
+options=('!docs' '!libtool' '!staticlibs')
+source=('http://guinnux.kses.net/v5/source/busybox-1.21.1.tar.bz2'   
+        'config'
+        'udhcp-config.tar.gz')
+md5sums=('795394f83903b5eec6567d51eebb417e'
+         '980f721e57759841b169c3352691363b'
+         '9bf72d6b46477360498a206fd2e80bbb')
+
+build() {
+  cd "$srcdir/busybox-$pkgver"
+  cp $srcdir/config .config
+  sed -i -e "s|CONFIG_CROSS_COMPILER_PREFIX=.*|CONFIG_CROSS_COMPILER_PREFIX=\"$CHOST-\"|g" .config
+  sed -i -e "s|CONFIG_PREFIX=.*|CONFIG_PREFIX=\"$pkgdir\"|g" .config 
+#  sed '1,1i#include <sys/resource.h>' -i include/libbb.h
+# if you want to run menuconfig uncomment the following line:
+#  make menuconfig ; return 1
+  make
+}
+
+package() {
+  cd "$srcdir/busybox-$pkgver"
+  make install
+cd "$pkgdir"
+tar -xvf "$srcdir/udhcp-config.tar.gz"
+chmod 4755 bin/busybox
+}
