@@ -1,0 +1,20 @@
+# $Id: PKGBUILD 218444 2014-07-31 11:20:42Z anatolik $
+# Maintainer: KSES <guinnux@kses.net>
+
+pkgname=init-rescue
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="The Init script for the rescue image"
+arch=('any')
+url="http://www.guinnux.org/"
+license=('BSD')
+provides=('init')
+source=('init'
+        'interfaces')
+ md5sums=('6ea9f9532d9cfb3eba04d20df074c8df'
+         'eea00bee5d5a1e41ffcde56b2f09e48c')
+        
+package() {
+  install -D -m755 init "$pkgdir"/usr/bin/init
+  install -D -m644 interfaces "$pkgdir"/etc/network/interfaces
+}

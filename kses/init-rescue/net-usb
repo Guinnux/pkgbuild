@@ -1,0 +1,7 @@
+#!/usr/bin/gnxid -s
+
+if [ ! -z $GNX_USB ] ; then
+  /usr/sbin/udhcpd -S /etc/USB0udhcpd.conf
+fi
+
+

@@ -34,10 +34,9 @@ source=(https://sources.archlinux.org/other/pacman/pacman-$pkgver.tar.gz
 md5sums=('2a596fc8f723e99660c0869a74afcf47'
          'e8f72afe6f417d11bd36ada042744fe4'
          '291123878ec33ca8a3020ac85f2e91d1'
-         '5c491b27bae54d93d6ba972ce0fccfa7'
+         'fefafd5daa9ffe01dbd1cd4c8c7d7073'
          'c88c41076f26e97c6915d8b967df96e7')
-# validpgpkeys=('6645B0A8C7005E78DB1D7864F99FFE0FEAE999BD')  # Allan McRae <allan@archlinux.org>
-
+               
 prepare() {
   cd $srcdir/pacman-$pkgver
 
@@ -47,7 +46,7 @@ prepare() {
 
 build() {
   cd "pacman-$pkgver"
-  ./configure --prefix=/usr \
+  ac_cv_func_malloc_0_nonnull=yes ./configure --prefix=/usr \
               --host=$CHOST \
               --sysconfdir=/etc \
               --localstatedir=/var \
@@ -57,10 +56,6 @@ build() {
               --without-libcurl 
   make
   make -C contrib
-}
-
-check() {
-  make -C "pacman-$pkgver" check
 }
 
 package() {
@@ -100,7 +95,7 @@ package() {
   install -m644 "$srcdir/makepkg.conf" "$pkgdir/etc"
   sed -i "$pkgdir/etc/makepkg.conf" \
     -e "s|@CARCH[@]|$mycarch|g" \
-    -e "s|@CHOST[@]|$mychost|g" \
+    -e "s|@CHOST[@]|$CHOST|g" \
     -e "s|@CARCHFLAGS[@]|$myflags|g"
   sed -i $pkgdir/etc/pacman.conf -e "s|@CARCH[@]|$mycarch|g"
 

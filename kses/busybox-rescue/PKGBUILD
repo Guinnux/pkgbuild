@@ -9,7 +9,9 @@ arch=('arm')
 url="http://www.busybox.net/"
 license=('GPL')
 packager="John Eigelaar <john@kses.net>"
-options=('!docs' '!libtool' '!staticlibs')
+provides=('sh' 'bash')
+conflicts=('bash')
+options=('strip' '!docs' '!libtool' '!staticlibs')
 source=('http://guinnux.kses.net/v5/source/busybox-1.21.1.tar.bz2'   
         'config'
         'udhcp-config.tar.gz')
@@ -29,9 +31,28 @@ build() {
 }
 
 package() {
-  cd "$srcdir/busybox-$pkgver"
+mkdir -p "$pkgdir/usr/bin"
+mkdir -p "$pkgdir/usr/lib"
+mkdir -p "$pkgdir/var"
+mkdir -p "$pkgdir/run"
+
+cd "$pkgdir"
+ln -sv usr/bin bin
+ln -sv usr/bin sbin
+ln -sv usr/lib lib
+cd "$pkgdir/var"
+ln -sv ../run run
+cd "$pkgdir/usr"
+ln -sv bin sbin
+   
+cd "$srcdir/busybox-$pkgver"
   make install
 cd "$pkgdir"
 tar -xvf "$srcdir/udhcp-config.tar.gz"
 chmod 4755 bin/busybox
+rm -v usr/sbin
+rm -v bin
+rm -v sbin
+rm -v lib
+rmdir -v var/run
 }

@@ -10,7 +10,7 @@ url="http://libarchive.org/"
 license=('BSD')
 depends=('xz' 'zlib')
 options=('strip' 'debug' 'libtool')
-provides=('libarchive.so' 'libarcvive')
+provides=('libarchive.so' 'libarchive=$pkgver')
 source=("http://libarchive.org/downloads/libarchive-$pkgver.tar.gz"
         '0001-mtree-fix-line-filename-length-calculation.patch'
         '0001-Limit-write-requests-to-at-most-INT_MAX.patch'
@@ -42,18 +42,13 @@ prepare() {
 build() {
   cd "libarchive-$pkgver"
   ./configure --prefix=/usr \
+              --host=$CHOST \
               --without-iconv \
              --without-openssl \
              --without-expat \
              --disable-xattr  \
               --without-xml2
   make
-}
-
-check() {
-  cd "libarchive-$pkgver"
-
-  make check
 }
 
 package() {

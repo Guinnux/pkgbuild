@@ -1,0 +1,77 @@
+#!/bin/sh
+
+echo "" | tee -a /var/gnxBoot.log
+
+echo -n "Hostname..."
+/bin/hostname "rescue"
+echo "rescue"
+
+# remove /init symbolic link to /sbin/init (neater)
+rm /init >> /var/gnxBoot.log 2>&1
+
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+echo "Starting syslogd..." | tee -a /var/gnxBoot.log
+/sbin/syslogd
+echo "Starting klogd..." | tee -a /var/gnxBoot.log
+/sbin/klogd
+
+echo "Mounting sysfs..." | tee -a /var/gnxBoot.log
+/bin/mount -t sysfs sys /sys >> /var/gnxBoot.log 2>&1
+echo "Mounting proc..." | tee -a /var/gnxBoot.log
+/bin/mount -t proc proc /proc >> /var/gnxBoot.log 2>&1
+
+echo "Changing TERM to vt102..." | tee -a /var/gnxBoot.log
+export TERM=vt102
+
+# setup networking
+echo "Setting up networking..." | tee -a /var/gnxBoot.log
+/sbin/net-boot
+
+echo "Bringing up all auto interfaces..." >> /var/gnxBoot.log
+/sbin/ifup -a
+
+# starting udhcpd on usb0
+echo "Starting dhcp server on usb0 interface..."
+echo "Starting dhcp server on usb0 interface..." >> /var/gnxBoot.log
+#/bin/cp /var/network-setup/USB0udhcpd.conf /etc/USB0udhcpd.conf
+#/usr/sbin/udhcpd -S /etc/USB0udhcpd.conf
+
+/sbin/net-usb
+
+echo "Checking dropbear keys..." | tee -a /var/gnxBoot.log
+if [ -e /etc/dropbear/dropbear_rsa_host_key ]; then 
+	echo "RSA okay" | tee -a /var/gnxBoot.log
+else
+	echo "Generating rsa key..." | tee -a /var/gnxBoot.log
+	dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key >> /var/gnxBoot.log 2>&1
+fi
+if [ -e /etc/dropbear/dropbear_dss_host_key ]; then 
+	echo "DSS okay" | tee -a /var/gnxBoot.log
+else
+	echo "Generating dss key..." | tee -a /var/gnxBoot.log
+        dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key >> /var/gnxBoot.log 2>&1
+fi
+echo "Starting dropbear..." | tee -a /var/gnxBoot.log
+#dropbear -b /etc/banners/sshLogin
+dropbear
+if [ "$?" == 0 ]; then
+	echo "Dropbear started successfully." | tee -a /var/gnxBoot.log
+else
+	echo "Dropbear failed with error code $?. Please investigate syslog (/var/log/messages) for details." | tee -a /var/gnxBoot.log
+fi
+
+# display the banner for serial login
+/bin/cat /etc/banners/serialLogin | tee -a /var/gnxBoot.log
+
+# setup some other environment variables
+export PS1="\[\e[1;31m\]\h:\w \$ \[\e[0m\]"
+
+echo "Beginning login session..." | tee -a /var/gnxBoot.log
+echo "Boot ended, please refer to syslod (/var/log/messages) for runtime logging" >> /var/gnxBoot.log
+echo ""
+while :
+do
+	/bin/login -p
+	echo "Logging you out..."
+done

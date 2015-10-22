@@ -1,0 +1,21 @@
+# $Id: PKGBUILD 218444 2014-07-31 11:20:42Z anatolik $
+# Maintainer: KSES <guinnux@kses.net>
+
+pkgname=openssl-rescue
+pkgver=1.0.2.d
+pkgrel=1
+pkgdesc="The Open Source toolkit for Secure Sockets Layer and Transport Layer Security"
+arch=('arm')
+url="http://www.guinnux.org/"
+license=('BSD')
+provides=('openssl')
+depneds=('zlib')
+source=('http://guinnux.kses.net/v5/pacman/arm/core/openssl-1.0.2.d-1-arm.pkg.tar.xz')
+md5sums=('c974db11cda2568522359c43f3b24ee3')      
+
+package ()
+{
+  cp -dvR "$srcdir"/{usr,etc} "$pkgdir"
+  rm -vR "$pkgdir"/usr/include
+  rm -vR "$pkgdir"/usr/share/man
+}
