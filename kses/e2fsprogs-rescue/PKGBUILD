@@ -2,41 +2,49 @@
 # Maintainer: Ronald van Haren <ronald.archlinux.org>
 # Contributor: judd <jvinet@zeroflux.org>
 
-pkgname=e2fsprogs
-pkgver=1.42.12
-pkgrel=2
-pkgdesc="Ext2/3/4 filesystem utilities"
+pkgname=e2fsprogs-rescue
+pkgver=1.42.13
+pkgrel=1
+pkgdesc="Ext2/3/4 filesystem utilities - for the rescue filesystem"
 arch=('i686' 'x86_64')
 license=('GPL' 'LGPL' 'MIT')
 url="http://e2fsprogs.sourceforge.net"
 groups=('base')
-depends=('sh' 'libutil-linux')
-makedepends=('bc' 'util-linux')
-source=("http://downloads.sourceforge.net/sourceforge/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+depends=('sh')
+provides=('e2fsprogs')
+makedepends=('bc')
+source=("http://downloads.sourceforge.net/sourceforge/${pkgname}/e2fsprogs-${pkgver}.tar.gz"
         'CVE-2015-1572.patch' 'MIT-LICENSE')
 backup=('etc/mke2fs.conf')
-options=('staticlibs')
-install=${pkgname}.install
-sha1sums=('083c1bb0d1e85672e8038a2fadf70b24e7409db7'
+options=('staticlibs' 'strip')
+install=e2fsprogs.install
+
+sha1sums=('77d1412472ac5a67f8954166ec16c37616074c37'
           '7d0a46b59ea298e517f983f8ff67d29a0307f1ba'
           'f4a0d5b0cdb980e3fedd6f5e7dde0b0ffb7bbdfb')
 
 prepare() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${srcdir}/e2fsprogs-${pkgver}"
 
   # Remove unnecessary init.d directory
   sed -i '/init\.d/s|^|#|' misc/Makefile.in
 
   # backport CVE 2015-1572 fix
-  patch -Np1 -i "${srcdir}/CVE-2015-1572.patch"
+  # patch -Np1 -i "${srcdir}/CVE-2015-1572.patch"
 }
 
 build() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${srcdir}/e2fsprogs-${pkgver}"
 
-  ./configure --prefix=/usr --with-root-prefix="" --libdir=/usr/lib \
-      --sbindir=/usr/bin --enable-elf-shlibs --disable-fsck --disable-uuidd \
-      --disable-libuuid --disable-libblkid
+  ./configure --prefix=/usr \
+              --host=$CHOST \
+              --with-root-prefix="" \
+              --libdir=/usr/lib \
+              --sbindir=/usr/bin \
+              --disable-nls \
+              --disable-rpath \
+              --enable-symlink-install \
+              --enable-symlink-build
 
   make
 }
@@ -44,7 +52,7 @@ build() {
 package() {
   unset MAKEFLAGS
 
-  cd "${srcdir}/${pkgname}-${pkgver}"
+  cd "${srcdir}/e2fsprogs-${pkgver}"
   make DESTDIR="${pkgdir}" install install-libs
 
   sed -i -e 's/^AWK=.*/AWK=awk/' "${pkgdir}/usr/bin/compile_et"

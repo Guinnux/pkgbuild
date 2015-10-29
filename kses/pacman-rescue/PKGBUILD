@@ -31,12 +31,13 @@ source=(https://sources.archlinux.org/other/pacman/pacman-$pkgver.tar.gz
         0001-Sychronize-filesystem.patch
         pacman.conf
         makepkg.conf)
+
 md5sums=('2a596fc8f723e99660c0869a74afcf47'
          'e8f72afe6f417d11bd36ada042744fe4'
          '291123878ec33ca8a3020ac85f2e91d1'
-         'fefafd5daa9ffe01dbd1cd4c8c7d7073'
+         '1cc2d1b7af069b720676e4b00d09baf6'
          'c88c41076f26e97c6915d8b967df96e7')
-               
+
 prepare() {
   cd $srcdir/pacman-$pkgver
 
