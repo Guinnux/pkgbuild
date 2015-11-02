@@ -1,0 +1,9 @@
+pkgname=gnxid
+pkgver=1.42.13
+pkgrel=1
+pkgdesc="Guinnux platform identity tool"
+arch=('i686' 'x86_64')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base' 'rescue')
+source=('gnxid::git+http://gitrepo/Guinnux/kses.git')
