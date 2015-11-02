@@ -1,13 +1,13 @@
-pkgname=gnxid
+pkgname=libklog
 pkgver=20151102
 pkgrel=1
-pkgdesc="Guinnux platform identity tool"
+pkgdesc="KSES Logging, tracing and debug library"
 arch=('i686' 'x86_64')
-license=('GPL')
+license=('LGPL')
 url="http://www.guinnux.org"
 groups=('base' 'rescue')
-depends=('libklog')
-source=('gnxid::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git')
+depends=('log4cpp')
+source=('libklog::git+http://bugz.kses.net/gitrepo/KLib.git')
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
@@ -20,23 +20,22 @@ pkgver()
 
 prepare()
 {
-  cd $srcdir/gnxid/gnxid
-  echo "I'm at $srcdir/gnxid/gnxid"
+  cd $srcdir/$pkgname/$pkgname
+  echo "I'm at $srcdir/$pkgname/$pkgname"
   autoreconf -fi
 }
 
 build()
 {
-  cd $srcdir/gnxid/gnxid
+  cd $srcdir/$pkgname/$pkgname
   ./configure --host=$CHOST \
-              --prefix=/usr \
-              --sysconfdir=/etc
+              --prefix=/usr 
               
   make              
 }
 
 package()
 {
-  cd $srcdir/gnxid/gnxid
+  cd $srcdir/$pkname/$pkgname
   make DESTDIR=$pkgdir install
 }
