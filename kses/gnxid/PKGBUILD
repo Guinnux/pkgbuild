@@ -1,5 +1,5 @@
 pkgname=gnxid
-pkgver=20151102
+pkgver=2.0.2
 pkgrel=1
 pkgdesc="Guinnux platform identity tool"
 arch=('i686' 'x86_64')
@@ -15,19 +15,20 @@ options=('strip' '!staticlibs')
 
 pkgver()
 {
-  date +%Y%m%d
-}
+  
+  cd $srcdir/$pkgname/$pkgname
 
-prepare()
-{
-  cd $srcdir/gnxid/gnxid
-  echo "I'm at $srcdir/gnxid/gnxid"
-  autoreconf -fi
+  autoreconf -fi > /dev/null
+  
+  readarray -t lines <<<"$(./configure --version)"
+  versionarray=(${lines[0]// / })
+  echo ${versionarray[2]}
+  
 }
 
 build()
 {
-  cd $srcdir/gnxid/gnxid
+  cd $srcdir/$pkgname/$pkgname
   ./configure --host=$CHOST \
               --prefix=/usr \
               --sysconfdir=/etc
@@ -37,6 +38,6 @@ build()
 
 package()
 {
-  cd $srcdir/gnxid/gnxid
+  cd $srcdir/$pkgname/$pkgname
   make DESTDIR=$pkgdir install
 }
