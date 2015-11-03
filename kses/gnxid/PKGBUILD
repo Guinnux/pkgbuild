@@ -7,8 +7,11 @@ license=('GPL')
 url="http://www.guinnux.org"
 groups=('base' 'rescue')
 depends=('libklog')
-source=('gnxid::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git')
-md5sums=('SKIP')
+source=('gnxid::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
+        'gnxid.conf')
+        
+md5sums=('SKIP'
+         '1b66d9dcf975ae874257879e9ab667fd') 
 
 options=('strip' '!staticlibs')
 
@@ -40,4 +43,6 @@ package()
 {
   cd $srcdir/$pkgname/$pkgname
   make DESTDIR=$pkgdir install
+  install -Dm644 "$srcdir"/gnxid.conf "$pkgdir"/etc/gnxid.conf
+  
 }

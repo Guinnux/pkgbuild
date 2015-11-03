@@ -1,0 +1,119 @@
+#!/usr/bin/gnxid -s
+
+NETHOME="/etc/network"
+
+INTERFACES="interfaces"
+NETCONF="/etc/network.conf"
+
+BOOTIF=""
+
+
+setup_iface()
+{
+echo "#begin $1
+auto $1
+iface $1 inet static
+ address $2
+ netmask $3"
+
+if [[ -n "$4" ]]; then
+	echo " gateway $4"
+fi
+
+echo "#end $1"
+}
+
+
+if [ ! -d $NETHOME ]; then
+   mkdir -p $NETHOME/run
+   mkdir -p $NETHOME/if-pre-up.d
+   mkdir -p $NETHOME/if-up.d
+   mkdir -p $NETHOME/if-post-up.d
+   mkdir -p $NETHOME/if-pre-down.d
+   mkdir -p $NETHOME/if-down.d
+   mkdir -p $NETHOME/if-post-down.d
+fi
+
+echo "Clear the interfaces file"
+
+echo > $NETHOME/$INTERFACES
+
+echo "auto lo
+iface lo inet loopback
+" >> $NETHOME/$INTERFACES
+
+if [ ! -z $GNX_VLAN ]; then
+   echo "This is a VLAN installation"
+
+   echo "auto eth0
+iface $GNX_VLAN inet manual
+up ip link set $GNX_VLAN up
+down ip addr add 0.0.0.0/0 dev $GNX_VLAN 
+" >> $NETHOME/$INTERFACES
+
+   mkdir -p $NETHOME/if-pre-up.d
+   mkdir -p $NETHOME/if-post-down.d
+
+
+   echo "#!/bin/bash
+
+case \$IFACE in
+	wan)
+		/sbin/ip link add link $GNX_VLAN name wan type vlan id 3
+	;;
+	lan)
+		/sbin/ip link add link $GNX_VLAN name lan type vlan id 4
+	;;
+esac" > $NETHOME/if-pre-up.d/vlan-up
+ 
+chmod a+x $NETHOME/if-pre-up.d/vlan-up
+
+   echo "#!/bin/bash
+
+case \$IFACE in
+        wan)
+                /sbin/ip link delete wan
+        ;;
+        lan)
+                /sbin/ip link delete lan
+        ;;
+esac" > $NETHOME/if-post-down.d/vlan-down
+
+chmod a+x $NETHOME/if-post-down.d/vlan-down
+
+BOOTIF="$BOOTIF $GNX_VLAN"
+ 
+fi;
+
+if [ ! -z $GNX_WAN ]; then
+	echo "Install WAN Interface"
+	setup_iface  $GNX_WAN "192.168.1.100" "255.255.255.0" "192.168.1.1" >> $NETHOME/$INTERFACES
+	echo >> $NETHOME/$INTERFACES 
+	BOOTIF="$BOOTIF $GNX_WAN"
+	
+fi;
+	
+if [ ! -z $GNX_LAN ]; then
+	echo "Install LAN Interface"
+	setup_iface  $GNX_LAN "192.168.2.1" "255.255.255.0" >> $NETHOME/$INTERFACES
+	echo >> $NETHOME/$INTERFACES
+	BOOTIF="$BOOTIF $GNX_LAN"
+fi;	
+
+if [ ! -z $GNX_USB ]; then
+	echo "Install USB Interface"
+	setup_iface  $GNX_USB "192.168.5.1" "255.255.255.0" >> $NETHOME/$INTERFACES
+	echo >> $NETHOME/$INTERFACES
+	BOOTIF="$BOOTIF $GNX_USB"
+fi;	
+
+echo "The Boot Inetfaces are: $BOOTIF"
+
+echo "#
+# Network Interfaces
+#
+# Network interfaces that should be brought up at boot time
+#
+
+INTERFACES=(\${INTERFACES[@]}$BOOTIF)
+" > $NETCONF

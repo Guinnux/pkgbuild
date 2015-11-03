@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+NETHOME="/etc/network"
+INTERFACES="interfaces"
+NETINST="/sbin/net-install"
+
+if [ ! -e $NETHOME/$INTERFACES ] ; then
+	exec $NETINST
+fi

@@ -10,11 +10,21 @@ url="http://www.guinnux.org/"
 license=('BSD')
 provides=('init')
 source=('init'
-        'interfaces')
- md5sums=('6ea9f9532d9cfb3eba04d20df074c8df'
-         'eea00bee5d5a1e41ffcde56b2f09e48c')
+        'net-boot'
+        'net-install'
+        'net-usb'
+        'USB0udhcpd.conf')
         
+md5sums=('6ea9f9532d9cfb3eba04d20df074c8df'
+         'dd3465899fdb7d8ad88e6554ab6177e5'
+         '5fc13198dbd57b4a09a652aaad4e5aa4'
+         '18aed1df882baee76ddca3e9e70748b9'
+         '11430f9e5f552619f7f22aeee95c426f')
+ 
 package() {
   install -D -m755 init "$pkgdir"/usr/bin/init
-  install -D -m644 interfaces "$pkgdir"/etc/network/interfaces
+  install -D -m755 net-boot "$pkgdir"/usr/bin/net-boot
+  install -D -m755 net-install "$pkgdir"/usr/bin/net-install
+  install -D -m755 net-usb "$pkgdir"/usr/bin/net-usb
+  install -D -m644 USB0udhcpd.conf "$pkgdir"/etc/USB0udhcpd.conf
 }

@@ -16,7 +16,7 @@ md5sums=('1e173df8ee97205f412ff84aa93b8fbe')
 build() {
 	cd "$srcdir/$pkgname"
   export CXXFLAGS="$CXXFLAGS -lpthread"
-  ./configure --prefix=/usr --disable-doxygen --disable-dot --without-idsa
+  ./configure --host=$CHOST --prefix=/usr --disable-doxygen --disable-dot --without-idsa
 	make
 }
 
