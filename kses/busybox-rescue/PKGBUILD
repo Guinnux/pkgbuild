@@ -14,10 +14,17 @@ conflicts=('bash')
 options=('strip' '!docs' '!libtool' '!staticlibs')
 source=('http://guinnux.kses.net/v5/source/busybox-1.21.1.tar.bz2'   
         'config'
-        'udhcp-config.tar.gz')
+        'udhcp-config.tar.gz'
+        'bash.bashrc'
+        'ashrc'
+        'profile')
+
 md5sums=('795394f83903b5eec6567d51eebb417e'
          '980f721e57759841b169c3352691363b'
-         '9bf72d6b46477360498a206fd2e80bbb')
+         '9bf72d6b46477360498a206fd2e80bbb'
+         '561949793177116b7be29a07c385ba8b'
+         'd0b5c19c3ac0fb2690c7373f412f27be'
+         '99226c0b3e75f758176cd19da62ff36e')
 
 build() {
   cd "$srcdir/busybox-$pkgver"
@@ -55,4 +62,7 @@ rm -v bin
 rm -v sbin
 rm -v lib
 rmdir -v var/run
+install -D -m644 "$srcdir"/bash.bashrc "$pkgdir"/etc/bash.bashrc
+install -D -m644 "$srcdir"/ashrc "$pkgdir"/etc/ashrc
+install -D -m755 "$srcdir"/profile "$pkgdir"/etc/profile
 }

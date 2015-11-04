@@ -1,0 +1,23 @@
+#!/bin/sh
+
+echo "Synchronising current config with the flash image..."
+
+echo "Mounting Flash RW..."
+
+mount -o remount,rw /mnt/rescRO
+
+echo "Updating network configuration.."
+cp -dR /etc/network /mnt/rescRO/etc
+cp /etc/network.conf /mnt/rescRO/etc
+cp /etc/resolv.conf /mnt/rescRO/etc
+
+echo "Updating dropbear keys.."
+cp -dR /etc/dropbear /mnt/rescRO/etc
+
+echo "Mounting Flash RO.."
+mount -o remount,ro /mnt/rescRO
+
+echo "That's all folks"
+
+
+

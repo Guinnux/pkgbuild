@@ -1,0 +1,24 @@
+pkgname=gnx-installer
+pkgver=3.0
+pkgrel=1
+pkgdesc="Guinnux Installer Scripts"
+arch=('any')
+license=('LGPL')
+url="http://www.guinnux.org"
+groups=('base' 'rescue')
+depends=('sh')
+source=('setup'
+        'synch-config'
+        'pkglist')
+        
+md5sums=('68b329da9893e34099c7d8ad5cb9c940'
+         'ee2e49b1a76473242f3a8b3cdbb38751'
+         '68b329da9893e34099c7d8ad5cb9c940')
+
+
+package()
+{
+  install -D -m755 $srcdir/setup $pkgdir/usr/bin/setup
+  install -D -m755 $srcdir/synch-config $pkgdir/usr/bin/synch-config
+  install -D -m755 $srcdir/pkglist $pkgdir/usr/share/setup/pkglist
+}
