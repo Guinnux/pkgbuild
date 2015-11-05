@@ -1,1 +1,189 @@
+#!/bin/sh
+
+# colour for output
+txtbld=$(tput bold)
+txtund=${txtbld}$(tput sgr 0 1)
+txtred=$(tput setaf 1)
+txtyellow=$(tput setaf 3)
+txtblue=$(tput setaf 4)
+txtreset=$(tput sgr0)
+
+# record the exit code if we need to clean up
+EXIT_CODE="0"
+
+# check if root is running this
+if [ "`id -u`" != "0" ]; then
+        echo "${txtbld}${txtred}Permission denied, must be root!${txtreset}" 1>&2
+        exit 1
+fi
+
+# establish default package list exists
+PKG_LIST=""
+if [ -e "/usr/share/setup/pkglist" ]; then
+	PKG_LIST="/usr/share/setup/pkglist"
+else
+        echo -e "${txtbld}${txtred}The package list(/usr/share/setup/pkglist) could not be found, please reinstall gnx-installer.${txtreset}\n" 1>&2
+        echo -e "Aborting...\n" 
+        exit 1
+fi
+
+if [ -z "$FS_TYPE" ]; then
+	FS_TYPE="ext4"
+fi
+
+mkdir /mnt/gnx -p
+
+echo "Starting Guinnux installer..."
+echo    "${txtbld}${txtblue}######################   Guinnux Installer  ########################${txtreset}"
+echo    ""
+echo    "Welcome to the Guinnux installer. The installer will install\
+ the base Guinnux operating system on the SD card.\
+ NOTE: This will erase all content on the SD card!" | fold -s
+
+echo    "The installer will now proceed. Before the main setup begins,\
+ please confirm the following installation specifications." | fold -s
+echo ""
+
+# incase the SD card is /dev/mmcblk"." where "." is not 0, we allow the disk to be specified
+if [ -n "$DISK" ]; then
+        echo -e -n  "${txtund}${txtblue}Target disk:${txtreset} $DISK\t"
+        echo -e -n "\n${txtbld}${txtyellow} WARN: This is not the standard disk device. Installing to\
+ this disk should work provided that it is /dev/mmcblk0 during startup.${txtreset}" | fold -s
+else
+        DISK=/dev/mmcblk0
+        echo -e -n  "${txtund}${txtblue}Target disk:${txtreset} $DISK\t"
+fi
+# check if $DISK is a block device
+if [ -b $DISK ]; then
+        echo -e "${txtbld}${txtblue}[ OK ]${txtreset}"
+else
+        echo -e "\n${txtbld}${txtred}$DISK is not a block device, have you inserted the SD card${txtreset}"
+	echo "NOTE: you can specify another block device file by setting DISK to its full path"
+        echo -e "Aborting...\n"
+        exit 1
+fi
+
+# determine the partition
+NON_STANDARD_BUILD=false
+if [ -n "$PART" ]; then
+	echo -e "${txtund}${txtblue}Target partition:${txtreset} $PART"
+        echo -e "${txtbld}${txtyellow} WARN: This is not the standard partition device. Installing to\
+ this partition should work provided that root is set to $PART in the kernel cmdline and that Guinnux root's\
+ fstab is edited appropriately so as to remount with the correct fs type and options (do this after the install).${txtreset}" | fold -s
+	NON_STANDARD_BUILD=true
+else
+	PART="${DISK}p1"
+	echo -e "${txtund}${txtblue}Target partition:${txtreset} $PART\t"	
+fi
+echo -e "${txtund}${txtblue}Partition format:${txtreset} $FS_TYPE"
+if [ "$FS_TYPE" != "ext4" ]; then
+	echo -e -n "${txtbld}${txtyellow} WARN: This is not the standard format for the root partition. Using this\
+ formatting should work provided that root_type is set to the name of the file system type in the kernel cmdline and that Guinnux root's\
+ fstab is edited appropriately so as to remount with the correct fs type and options (do this after the install).${txtreset}" | fold -s
+	NON_STANDARD_BUILD=true
+fi
+echo ""
+
+# state some more details about the partition setup
+echo -e "${txtund}${txtblue}Current partition table (will be lost on install!):${txtreset}"
+/sbin/fdisk -l $DISK | grep -v '^$' | fold -s
+
+echo ""
+
+# prompt for if we must continue
+while true; do
+        read -p "Do you want to overwrite the partition table? (${txtbld}y${txtreset}es / ${txtbld}n${txtreset}o / ${txtbld}a${txtreset}bort) : " choice
+        case $choice in
+                [y]* )
+                        echo -e "Partition table will be ${txtbld}overwritten${txtreset} when setup begins.\n" ;
+                        SAVE=0;
+                        break;;
+                [n]* )
+                        echo -e "Partition table will be ${txtbld}preserved${txtreset} when setup begins...\n" ;
+                        SAVE=1;
+                        break;;
+                [a]* )
+                        echo -e "Aborting...\n" ;
+                        exit 0;;
+        esac
+done
+
+if [ "$SAVE" == 0 ]; then
+    echo "${txtbld}${txtblue}Creating new empty DOS partition table on $DISK...${txtreset}"
+    fdisk $DISK > /dev/null 2>&1 << EOF
+o
+v
+w
+EOF
+
+    echo "${txtbld}${txtblue}Creating new partition on $DISK...${txtreset}"
+    fdisk -u $DISK > /dev/null 2>&1 << EOF
+n
+p
+1
+2048
+
+v
+w
+EOF
+
+else
+    echo "${txtbld}${txtblue}Partition table on $DISK will not be changed${txtreset}..."
+fi
+
+echo "${txtbld}${txtblue}Creating $FS_TYPE filesystem on $PART...${txtreset}"
+mkfs.$FS_TYPE $PART
+if [ "$?" != "0" ]; then
+        echo "Error: Failed to format the Guinnux root with \"$FS_TYPE\"" 1>&2
+        exit "$?"
+fi
+
+echo ""
+
+# establish GNX_PATH
+if [ -z "$GNX_PATH" ]; then
+	GNX_PATH="/mnt/gnx"
+fi
+
+if [ -z "$DISK" ]; then
+        DISK="/dev/mmcblk0"
+fi
+if [ -z "$PART" ]; then
+	PART="/dev/mmcblk0p1"
+fi
+
+#open gnx root up for editing
+if [ "$GNX_PATH" == "/" ]; then
+	# we are running from the guinnux root so don't do any special mounting/unmounting
+	echo ""
+else
+    #mount $PART on $GNX_PATH and bind device files
+    mkdir -p "$GNX_PATH" 1>/dev/null
+    mountpoint -q "$GNX_PATH" 1>/dev/null
+    if [ "$?" == "0" ]; then
+	   echo "Error: $GNX_PATH is already a mountpoint, cannot continue" 1>&2
+	   exit 1
+    fi
+    mount -t ext4 "$PART" "$GNX_PATH" 1>/dev/null
+    if [ "$?" != "0" ]; then
+	   echo "Error: Failed to mount $PART on $GNX_PATH" 1>&2
+    fi
+    mkdir -p $GNX_PATH/dev
+    mount --bind /dev $GNX_PATH/dev
+    if [ "$?" != "0" ]; then
+        echo "Error: Failed to bind device files to the Guinnux root" 1>&2
+    fi
+fi
+
+PACMAN_CMD="pacman --cachedir $GNX_PATH/var/cache/pacman/pkg -r $GNX_PATH"
+PACKAGES=$(cat $PKG_LIST)
+mkdir -p $GNX_PATH/var/lib/pacman
+
+
+echo "${txtbld}${txtblue}Downloading Packages...${txtreset}"
+$PACMAN_CMD -Sy --noconfirm
+$PACMAN_CMD -Sw --noconfirm $PACKAGES
+
+echo "${txtbld}${txtblue}Installing Packages...${txtreset}"
+$PACMAN_CMD -S --noconfirm $PACKAGES
 

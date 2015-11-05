@@ -11,11 +11,10 @@ source=('setup'
         'synch-config'
         'pkglist')
         
-md5sums=('68b329da9893e34099c7d8ad5cb9c940'
+md5sums=('4bd99766e584935e79f44c01a8b805e9'
          'ee2e49b1a76473242f3a8b3cdbb38751'
-         '68b329da9893e34099c7d8ad5cb9c940')
-
-
+         'ab914d83f131c686e9d05fc85e18ddbf')
+                
 package()
 {
   install -D -m755 $srcdir/setup $pkgdir/usr/bin/setup
