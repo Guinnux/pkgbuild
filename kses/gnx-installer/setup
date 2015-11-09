@@ -170,6 +170,7 @@ else
     fi
     mkdir -p $GNX_PATH/dev
     mount --bind /dev $GNX_PATH/dev
+    mount --bind /proc $GNX_PATH/proc
     if [ "$?" != "0" ]; then
         echo "Error: Failed to bind device files to the Guinnux root" 1>&2
     fi

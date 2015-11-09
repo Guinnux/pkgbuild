@@ -1,1 +1,11 @@
+post_install() 
+{
+  # Need to figure out the networking parameters from gnxid and iproute 
+  # and apply them to the templates
+echo "This is the network post-install"
+echo "PWD: $PWD"
+gnxid -l
+ip addr  
+ls -l /proc/device-tree
+}
 

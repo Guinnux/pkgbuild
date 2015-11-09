@@ -14,10 +14,10 @@ source=('wan.template'
         'lan.template'
         'usb.template')
         
-md5sums=('4bd99766e584935e79f44c01a8b805e9'
-         'ee2e49b1a76473242f3a8b3cdbb38751'
-         'ab914d83f131c686e9d05fc85e18ddbf')
-                
+md5sums=('31909ca4a057441e1ce010083eb4e180'
+         '373563671e9bc2c77571a6a690a7fb95'
+         '1a53047c7290ed0810fde6ae590de01f')
+               
 package()
 {
   install -D -m644 $srcdir/wan.template $pkgdir/etc/netctl/wan
