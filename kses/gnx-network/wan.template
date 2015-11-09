@@ -1,0 +1,11 @@
+Description='WAN ethernet connection'
+Interface=@WANIF@
+
+BindsToInterfaces=@VLANIF@
+VLANID=3
+
+Connection=@WANCONMODE@
+IP=@WANIPMODE@
+Address=('@WANADDR@/@WANMASK@')
+Gateway='@WANGW@'
+

@@ -1,0 +1,8 @@
+Description='USB ethernet connection'
+Interface=@USBIF@
+
+Connection=@USBCONMODE@
+IP=@USBIPMODE@
+Address=('@USBADDR@/@USBMASK@')
+Gateway='@USBGW@'
+

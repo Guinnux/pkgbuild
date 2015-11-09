@@ -1,0 +1,11 @@
+Description='LAN ethernet connection'
+Interface=@LANIF@
+
+BindsToInterfaces=@VLANIF@
+VLANID=4
+
+Connection=@LANCONMODE@
+IP=@LANIPMODE@
+Address=('@LANADDR@/@LANMASK@')
+Gateway='@LANGW@'
+

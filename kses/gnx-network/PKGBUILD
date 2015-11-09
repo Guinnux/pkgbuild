@@ -1,0 +1,26 @@
+pkgname=gnx-network
+pkgver=3.0
+pkgrel=1
+pkgdesc="Guinnux Networking Configuration Scripts"
+arch=('any')
+license=('LGPL')
+url="http://www.guinnux.org"
+groups=('base')
+depends=('netctl' 'gnxid')
+
+install=gnx-network.install
+
+source=('wan.template'
+        'lan.template'
+        'usb.template')
+        
+md5sums=('4bd99766e584935e79f44c01a8b805e9'
+         'ee2e49b1a76473242f3a8b3cdbb38751'
+         'ab914d83f131c686e9d05fc85e18ddbf')
+                
+package()
+{
+  install -D -m644 $srcdir/wan.template $pkgdir/etc/netctl/wan
+  install -D -m644 $srcdir/lan.template $pkgdir/etc/netctl/lan
+  install -D -m644 $srcdir/usb.template $pkgdir/etc/netctl/usb
+}
