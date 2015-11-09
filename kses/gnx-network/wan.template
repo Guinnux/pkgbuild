@@ -1,11 +1,11 @@
 Description='WAN ethernet connection'
-Interface=@WANIF@
+Interface=eth0
 
-BindsToInterfaces=@VLANIF@
-VLANID=3
+#BindsToInterfaces=eth0
+#VLANID=3
 
-Connection=@WANCONMODE@
-IP=@WANIPMODE@
-Address=('@WANADDR@/@WANMASK@')
-Gateway='@WANGW@'
+Connection=ethernet
+IP=static
+Address=('192.168.1.100/24')
+Gateway='192.168.1.1'
 

@@ -1,0 +1,20 @@
+pkgname=kernel-modules
+
+pkgrel=13
+pkgdesc="Linux Kernel Modules"
+arch=('arm')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base')
+depends=('kmod')
+install=kernel-modules.install
+
+src=('http://gitlab.kses.net/guinnux/linux/repository/archive.tar.bz2?ref=gnx-current')
+
+md5sums=('SKIP')
+
+pkgver()
+{
+  
+}
+

@@ -1,11 +1,71 @@
+generate_wan()
+{
+	echo "We are now generating WAN templates"
+	echo "GNX_WAN=$GNX_WAN"
+	
+	if [ -v GNX_WAN ]; then
+		echo "WAN on $GNX_WAN"
+		sed -i s%Interface=.*%Interface=$GNX_WAN% /etc/netctl/wan
+		netctl enable wan
+	fi
+	
+	if [ -v GNX_VLAN ]; then
+		echo "WAN on VLAN $GNX_VLAN"
+		sed -i s%Interface=.*%Interface=wan% /etc/netctl/wan
+		sed -i s%#BindsToInterface=.*%BindsToInterface=$GNX_VLAN% /etc/netctl/wan
+		sed -i s%#VLANID=.*%VLANID=3% /etc/netctl/wan
+		sed -i s%Connection=.*%Connection=vlan% /etc/netctl/wan
+		netctl enable wan
+	fi
+}
+
+generate_usb()
+{
+	echo "We are now generating USB templates"
+	echo "GNX_USB=$GNX_USB"
+	
+	if [ -v GNX_USB ]; then
+		echo "USB on $GNX_USB"
+		sed -i s%Interface=.*%Interface=$GNX_USB% /etc/netctl/usb
+		netctl enable usb
+	fi
+	
+}
+
+generate_lan()
+{
+	echo "We are now generating LAN templates"
+	echo "GNX_LAN=$GNX_LAN"
+	
+	if [ -v GNX_LAN ]; then
+		echo "LAN on $GNX_LAN"
+		sed -i s%Interface=.*%Interface=$GNX_LAN% /etc/netctl/lan
+		netctl enable lan
+	fi
+	
+	if [ -v GNX_VLAN ]; then
+		echo "LAN on VLAN $GNX_VLAN"
+		sed -i s%Interface=.*%Interface=lan% /etc/netctl/lan
+		sed -i s%#BindsToInterface=.*%BindsToInterface=$GNX_VLAN% /etc/netctl/lan
+		sed -i s%#VLANID=.*%VLANID=4% /etc/netctl/lan
+		sed -i s%Connection=.*%Connection=vlan% /etc/netctl/lan
+		netctl enable lan
+	fi
+}
+
+
 post_install() 
 {
   # Need to figure out the networking parameters from gnxid and iproute 
   # and apply them to the templates
 echo "This is the network post-install"
 echo "PWD: $PWD"
-gnxid -l
-ip addr  
-ls -l /proc/device-tree
+gnxid -l > /tmp/gnxid.tmp
+source /tmp/gnxid.tmp
+
+
+generate_wan
+generate_lan
+generate_usb
 }
 
