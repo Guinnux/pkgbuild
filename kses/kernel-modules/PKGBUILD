@@ -1,20 +1,45 @@
 pkgname=kernel-modules
-
-pkgrel=13
+pkgver=3.10.16
+pkgrel=16
 pkgdesc="Linux Kernel Modules"
 arch=('arm')
 license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
 depends=('kmod')
+options=('!strip')
 install=kernel-modules.install
 
-src=('http://gitlab.kses.net/guinnux/linux/repository/archive.tar.bz2?ref=gnx-current')
+source=('linux.tar.bz2::http://gitlab.kses.net/guinnux/linux/repository/archive.tar.bz2?ref=gnx-current')
 
 md5sums=('SKIP')
 
 pkgver()
 {
+  cd "$srcdir"/linux
+  make ARCH=arm kernelversion
+}
+
+build()
+{
+  LOCALVERSION=
+  export LOCALVERSION
   
+  cd "$srcdir"/linux
+  mkdir -p $srcdir/build-white
+  mkdir -p $srcdir/build-blue
+  
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-white white_penguin_defconfig
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-blue bluepenguin_defconfig
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-white modules
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-blue modules
+}
+
+package()
+{
+  cd "$srcdir"/linux
+  
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-white INSTALL_MOD_PATH=$pkgdir/usr  modules_install
+  make ARCH=arm CROSS_COMPILE=$CHOST- O=$srcdir/build-blue INSTALL_MOD_PATH=$pkgdir/usr  modules_install
 }
 
