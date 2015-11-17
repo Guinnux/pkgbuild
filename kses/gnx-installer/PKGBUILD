@@ -11,7 +11,7 @@ source=('setup'
         'synch-config'
         'pkglist')
         
-md5sums=('4bd99766e584935e79f44c01a8b805e9'
+md5sums=('071fcfdd9f521dea95e2170544f77b27'
          'ee2e49b1a76473242f3a8b3cdbb38751'
          'ab914d83f131c686e9d05fc85e18ddbf')
                 
