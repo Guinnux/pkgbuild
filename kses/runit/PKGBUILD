@@ -1,0 +1,76 @@
+# Maintainer: replabrobin 
+#	hashup of void runit and base runit
+#	Archlinux package
+# 
+# copyright see
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+pkgname=runit
+pkgver=2.1.2
+pkgrel=1
+pkgdesc='Guinnux systemd compatible runit package'
+url='http://smarden.org/runit/'
+groups=('base')
+license=('Creative Commons')
+arch=('i686' 'x86_64')
+
+source=("http://smarden.org/runit/runit-${pkgver}.tar.gz"
+		'cross.patch' 
+		'utmpset-time_t.patch'
+		'runit.service'
+		'install-service'
+		'remove-service' 
+		)
+
+sha256sums=('6fd0160cb0cf1207de4e66754b6d39750cff14bb0aa66ab49490992c0c47ba18'
+            '51c17405558f5bbbe631d92a37adff872b9518fe1876a56b24efb05bedffae94'
+            '527f68f501cc9eb4bbab33f8ad374822624342c7d74b5c795efe4aac6b3f170a'
+            '8c016d9ed2e2bc323d494d1beeb4a50e4af108e1f76a889e888f6778fe024689'
+            'fb9b7a01797b3fb46cda9d70d7d9343c6c0b22f65fe0694181d5c03014d7fae0'
+            'f93396807f7edffd9ef42523ed7eb44e1504351b889a71d8fa24edabaf104251')
+
+depends=(systemd)
+
+provides=('runit')
+
+prepare(){
+	cd "${srcdir}/admin"
+	local pd=runit-${pkgver}
+	sed -i -e's,sbin/runit,usr/bin/runit,g' ${pd}/src/runit.h
+	sed -i -e's/ -static//g' ${pd}/src/Makefile
+	sed -i -e's:^char \*varservice ="/service/";$:char \*varservice ="/var/service/";:' ${pd}/src/sv.c
+	patch -d ${pd} -Np1 <${srcdir}/cross.patch
+	patch -d ${pd} -Np1 <${srcdir}/utmpset-time_t.patch
+	}
+
+build(){
+
+	cd "${srcdir}/admin/runit-${pkgver}"
+
+	## apply custom CFLAGS and LDFLAGS
+	echo "${CHOST}-gcc $CFLAGS" > src/conf-cc
+	echo "${CHOST}-gcc $LDFLAGS" > src/conf-ld
+
+	## compile
+	make -C 'src'
+	}
+
+
+package() {
+
+	cd "${srcdir}/admin/runit-${pkgver}"
+	
+	# install binaries
+	install -dm0755 "$pkgdir/usr/bin"
+	for f in $(<package/commands); do
+		install -m0755 src/$f "$pkgdir/usr/bin"
+	done
+
+	install -dm0755 "$pkgdir/etc/sv"
+	install -dm0755 "$pkgdir/service"
+	install -Dm0644 "$srcdir/runit.service" "$pkgdir/usr/lib/systemd/system/runit.service"
+	install -Dm0755 "$srcdir/install-service" "$pkgdir/usr/bin/install-service"
+	install -Dm0755 "$srcdir/remove-service" "$pkgdir/usr/bin/remove-service"
+	
+	install -Dm0644 package/COPYING "$pkgdir/usr/share/licenses/runit/LICENSE"
+	}

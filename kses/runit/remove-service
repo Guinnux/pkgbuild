@@ -1,0 +1,50 @@
+
+#!/bin/sh
+
+if [ -z "$1" ] ; then
+    echo "usage: remove-service <service_name>"
+else
+    # Stop the service
+    echo "Stopping service $1... "
+    sv stop "$1"
+    # Check if the directory exists
+    if [ -d "/service/$1" ] ; then
+        # Ok it's there, but is it a symlink?
+        if [ -L "/service/$1" ] ; then
+            echo -n "Removing symlink... "
+            rm "/service/$1"
+            # Did this actually remove it?
+            if [ -e "/service/$1" ] ; then
+                echo "Failed!"
+                exit 1
+            else
+                echo "Done!"
+                # Do we have a supervise directory to clean up?
+                if [ -d "/etc/sv/$1/supervise" ] ; then
+                    # Yep
+                    echo -n "Cleaning up /etc/sv/$1/supervise... "
+                    rm -rf "/etc/sv/$1/supervise"
+                    # Is it gone?
+                    if [ -d "/etc/sv/$1/supervise" ] ; then
+                        # Nope
+                        echo "Failed!"
+                        exit 1
+                    else
+                        # Yep
+                        echo "Done!"
+                        exit 0
+                    fi
+                else
+                    echo "No /etc/sv/$1/supervise to cleanup. All done."
+                    exit 0
+                fi
+            fi
+        else
+            echo "/service/$1 is not a symlink as expected."
+            exit 1
+        fi
+    else
+        echo "/service/$1 does not exist."
+    fi            
+fi
+

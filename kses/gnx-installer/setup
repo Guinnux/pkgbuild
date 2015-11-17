@@ -171,6 +171,7 @@ else
     mkdir -p $GNX_PATH/dev
     mount --bind /dev $GNX_PATH/dev
     mount --bind /proc $GNX_PATH/proc
+    mount --bind /sys $GNX_PATH/sys
     if [ "$?" != "0" ]; then
         echo "Error: Failed to bind device files to the Guinnux root" 1>&2
     fi
@@ -192,5 +193,11 @@ echo "${txtbld}${txtblue}Cleaning Package Cache...${txtreset}"
 $PACMAN_CMD -Scc --noconfirm
 
 cp /etc/pacman.conf $GNX_PATH/etc/pacman.conf
+cp $GNX_PATH/etc/iptables/empty.rules $GNX_PATH/etc/iptables/iptables.rules
+
+echo "${txtbld}${txtblue}Setting up default services...${txtreset}"
+chroot $GNX_PATH systemctl enable sshd
+chroot $GNX_PATH systemctl enable iptables
+chroot $GNX_PATH systemctl enable runit
 
 

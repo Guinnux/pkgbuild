@@ -1,0 +1,12 @@
+[Unit]
+Description=runit Service Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/runsvdir /service
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
