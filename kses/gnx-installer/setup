@@ -199,5 +199,6 @@ echo "${txtbld}${txtblue}Setting up default services...${txtreset}"
 chroot $GNX_PATH systemctl enable sshd
 chroot $GNX_PATH systemctl enable iptables
 chroot $GNX_PATH systemctl enable runit
+chroot $GNX_PATH systemctl enable lighttpd
 
 
