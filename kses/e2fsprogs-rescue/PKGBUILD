@@ -9,14 +9,14 @@ pkgdesc="Ext2/3/4 filesystem utilities - for the rescue filesystem"
 arch=('i686' 'x86_64')
 license=('GPL' 'LGPL' 'MIT')
 url="http://e2fsprogs.sourceforge.net"
-groups=('base')
+groups=('rescue')
 depends=('sh')
 provides=('e2fsprogs')
 makedepends=('bc')
-source=("http://downloads.sourceforge.net/sourceforge/${pkgname}/e2fsprogs-${pkgver}.tar.gz"
+source=("http://downloads.sourceforge.net/sourceforge/e2fsprogs/e2fsprogs-${pkgver}.tar.gz"
         'CVE-2015-1572.patch' 'MIT-LICENSE')
 backup=('etc/mke2fs.conf')
-options=('staticlibs' 'strip')
+options=('!staticlibs' 'strip')
 install=e2fsprogs.install
 
 sha1sums=('77d1412472ac5a67f8954166ec16c37616074c37'
