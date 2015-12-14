@@ -1,9 +1,9 @@
-NAME="Arch Linux ARM"
-ID=archarm
+NAME="Guinnux ARM"
+ID=gnxarm
 ID_LIKE=arch
-PRETTY_NAME="Arch Linux ARM"
+PRETTY_NAME="Guinnux ARM Linux"
 ANSI_COLOR="0;36"
-HOME_URL="http://archlinuxarm.org/"
-SUPPORT_URL="https://archlinuxarm.org/forum"
-BUG_REPORT_URL="https://github.com/archlinuxarm/PKGBUILDs/issues"
+HOME_URL="http://www.guinnux.org/"
+SUPPORT_URL="http://www.guinnux.org/"
+BUG_REPORT_URL="http://www.guinnux.org/"
 
