@@ -169,6 +169,9 @@ else
 	   echo "Error: Failed to mount $PART on $GNX_PATH" 1>&2
     fi
     mkdir -p $GNX_PATH/dev
+    mkdir -p $GNX_PATH/proc
+    mkdir -p $GNX_PATH/sys
+    
     mount --bind /dev $GNX_PATH/dev
     mount --bind /proc $GNX_PATH/proc
     mount --bind /sys $GNX_PATH/sys
@@ -177,6 +180,7 @@ else
     fi
 fi
 
+#PACMAN_CMD="exit"
 PACMAN_CMD="pacman --cachedir $GNX_PATH/var/cache/pacman/pkg -r $GNX_PATH"
 PACKAGES=$(cat $PKG_LIST)
 mkdir -p $GNX_PATH/var/lib/pacman
@@ -200,5 +204,6 @@ chroot $GNX_PATH systemctl enable sshd
 chroot $GNX_PATH systemctl enable iptables
 chroot $GNX_PATH systemctl enable runit
 chroot $GNX_PATH systemctl enable lighttpd
+chroot $GNX_PATH systemctl enable dhcpd4
 
 

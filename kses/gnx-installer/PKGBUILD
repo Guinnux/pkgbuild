@@ -5,13 +5,13 @@ pkgdesc="Guinnux Installer Scripts"
 arch=('any')
 license=('LGPL')
 url="http://www.guinnux.org"
-groups=('base' 'rescue')
+groups=('rescue')
 depends=('sh')
 source=('setup'
         'synch-config'
         'pkglist')
         
-md5sums=('8497b20c245bae0279ee82da01cc5329'
+md5sums=('4183247fc6922b3876afde0b08bd7178'
          'ee2e49b1a76473242f3a8b3cdbb38751'
          'ab914d83f131c686e9d05fc85e18ddbf')
 
