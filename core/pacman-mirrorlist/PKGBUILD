@@ -10,7 +10,7 @@ license=('GPL')
 groups=('base')
 backup=(etc/pacman.d/mirrorlist)
 source=(mirrorlist)
-md5sums=('32809d9ba169ee5f1d00a0e31010faba')
+md5sums=('ec690a032574af4a663e9f2177b2ac9e')
 
 package() {
   mkdir -p $pkgdir/etc/pacman.d

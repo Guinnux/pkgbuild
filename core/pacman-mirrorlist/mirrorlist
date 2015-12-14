@@ -6,9 +6,9 @@
 #The Only Mirror for now
 Server = http://guinnux.kses.net/v5/pacman/$arch/$repo
 
-#Enable the blow mirror for access to the Arch Linux ARM repos
+#Enable the below mirror for access to the Arch Linux ARM repos
 ## Geo-IP based mirror selection and load balancing
-Server = http://mirror.archlinuxarm.org/$arch/$repo
+# Server = http://mirror.archlinuxarm.org/$arch/$repo
 
 ### Mirrors by country
 

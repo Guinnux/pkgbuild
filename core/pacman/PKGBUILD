@@ -11,7 +11,7 @@
 
 pkgname=pacman
 pkgver=4.2.1
-pkgrel=2
+pkgrel=3
 pkgdesc="A library-based package manager with dependency support"
 arch=('i686' 'x86_64')
 url="http://www.archlinux.org/pacman/"
@@ -27,17 +27,19 @@ conflicts=('pacman-contrib')
 replaces=('pacman-contrib')
 backup=(etc/pacman.conf etc/makepkg.conf)
 options=('strip' 'debug')
-source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig}
+source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz
         ensure-matching-database-and-package-version.patch
         0001-Sychronize-filesystem.patch
         pacman.conf
         makepkg.conf)
+
+
 md5sums=('2a596fc8f723e99660c0869a74afcf47'
-         'SKIP'
          'e8f72afe6f417d11bd36ada042744fe4'
          '291123878ec33ca8a3020ac85f2e91d1'
-         '5c491b27bae54d93d6ba972ce0fccfa7'
+         '48ffa643175fcd66bb8221ab8ff59b26'
          'c88c41076f26e97c6915d8b967df96e7')
+
 validpgpkeys=('6645B0A8C7005E78DB1D7864F99FFE0FEAE999BD')  # Allan McRae <allan@archlinux.org>
 
 prepare() {
@@ -50,7 +52,7 @@ prepare() {
 build() {
   cd "$pkgname-$pkgver"
 
-  ./configure --prefix=/usr --sysconfdir=/etc \
+ ac_cv_func_malloc_0_nonnull=yes ./configure --prefix=/usr --host=$CHOST --sysconfdir=/etc \
     --localstatedir=/var --enable-doc \
     --with-scriptlet-shell=/usr/bin/bash \
     --with-ldconfig=/usr/bin/ldconfig
@@ -58,9 +60,6 @@ build() {
   make -C contrib
 }
 
-check() {
-  make -C "$pkgname-$pkgver" check
-}
 
 package() {
   cd "$pkgname-$pkgver"

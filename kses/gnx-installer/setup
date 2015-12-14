@@ -196,7 +196,6 @@ $PACMAN_CMD -S --noconfirm $PACKAGES
 echo "${txtbld}${txtblue}Cleaning Package Cache...${txtreset}"
 $PACMAN_CMD -Scc --noconfirm
 
-cp /etc/pacman.conf $GNX_PATH/etc/pacman.conf
 cp $GNX_PATH/etc/iptables/empty.rules $GNX_PATH/etc/iptables/iptables.rules
 
 echo "${txtbld}${txtblue}Setting up default services...${txtreset}"
