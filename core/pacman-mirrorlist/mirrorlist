@@ -1,8 +1,12 @@
 #
-# Arch Linux ARM repository mirrorlist
+# Guinnux Linux ARM repository mirrorlist
 # Generated on 2015-07-15
 #
 
+#The Only Mirror for now
+Server = http://guinnux.kses.net/v5/pacman/$arch/$repo
+
+#Enable the blow mirror for access to the Arch Linux ARM repos
 ## Geo-IP based mirror selection and load balancing
 Server = http://mirror.archlinuxarm.org/$arch/$repo
 
