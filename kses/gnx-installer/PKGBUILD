@@ -11,9 +11,10 @@ source=('setup'
         'synch-config'
         'pkglist')
         
-md5sums=('4183247fc6922b3876afde0b08bd7178'
+md5sums=('1a165207ce689a386968ea556ba8af93'
          'ee2e49b1a76473242f3a8b3cdbb38751'
          'ab914d83f131c686e9d05fc85e18ddbf')
+
 
 package()
 {
