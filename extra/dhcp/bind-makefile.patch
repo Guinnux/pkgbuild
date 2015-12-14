@@ -1,0 +1,20 @@
+--- Makefile.in	2015-12-10 15:59:29.991665912 +0200
++++ Makefile-new.in	2015-12-10 15:58:56.158701879 +0200
+@@ -26,7 +26,7 @@
+ 
+ bindsrcdir=bind-${version}
+ 
+-bindconfig = --disable-kqueue --disable-epoll --disable-devpoll \
++bindconfig = --host=${CHOST} --with-randomdev=/dev/random --disable-kqueue --disable-epoll --disable-devpoll \
+ 	--without-openssl --without-libxml2 --enable-exportlib \
+ 	--with-gssapi=no --enable-threads=no @BINDCONFIG@ \
+ 	--with-export-includedir=${binddir}/include \
+@@ -64,7 +64,7 @@
+ 		echo Configuring BIND Export libraries for DHCP. ;      \
+ 		rm -rf ${cleandirs} ${cleanfiles} ;                     \
+ 		(cd ${bindsrcdir} &&                                    \
+-                 ./configure ${bindconfig} > ${binddir}/configure.log); \
++               ac_cv_file__dev_random=yes ./configure BUILD_CC=gcc ${bindconfig} > ${binddir}/configure.log); \
+ 	fi
+ 
+ atf:
