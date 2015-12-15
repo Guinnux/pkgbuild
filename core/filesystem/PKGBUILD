@@ -21,7 +21,7 @@ backup=('etc/fstab' 'etc/crypttab' 'etc/group' 'etc/hosts' 'etc/ld.so.conf' 'etc
 source=('group' 'issue' 'nsswitch.conf' 'securetty' 'host.conf' 'ld.so.conf'
         'passwd' 'shadow' 'fstab' 'crypttab' 'hosts' 'motd' 'os-release' 'resolv.conf'
         'shells' 'gshadow' 'profile' 'modprobe.d.usb-load-ehci-first' 'archlinux.7.txt'
-        'locale.sh' 'default.bash_profile' 'default.bashrc')
+        'locale.sh')
 
 md5sums=('4d7417d2bf8872665c0907f09ae37c34'
          '7813c481156f6b280a3ba91fc6236368'
@@ -42,9 +42,7 @@ md5sums=('4d7417d2bf8872665c0907f09ae37c34'
          '0b6f835598c7640184e476057b3c7722'
          'a8a962370cd0128465d514e6a1f74130'
          '2e193c4a37245f2323ebe87f1a673563'
-         '71ed98c52e11ada1f936ac8cb14eecd9'
-         '2902e0fee7a9168f3a4fd2ccd60ff047'
-         '027d6bd8f5f6a06b75bb7698cb478089')
+         '71ed98c52e11ada1f936ac8cb14eecd9')
 
 
 
@@ -161,11 +159,4 @@ package() {
 	done
 	ln -s ../man usr/local/share/man
 	
-	#
-    # install the default home directory
-    #
-    #install -d -m700 -o 1000 -g 1000 home/default
-    #install -D -m644 -o 1000 -g 1000 ${srcdir}/default.bash_profile home/default/.bash_profile
-    #install -D -m644 -o 1000 -g 1000 ${srcdir}/default.bashrc home/default/.bashrc
-
 }

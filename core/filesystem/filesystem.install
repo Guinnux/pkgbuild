@@ -46,7 +46,7 @@ post_upgrade() {
 	_adduser systemd-bus-proxy -u 194 -g 194 -d / -s /usr/bin/nologin
 	_addgroup systemd-resolve -g 195
 	_adduser systemd-resolve -u 195 -g 195 -d / -s /usr/bin/nologin
-	_adduser default -m -U -p '$6$7JRddgQn$l9p/FtbvGjJl9fBi6C6yVsyA83D36jv3ORdTl7p4FgdW81VM7qAjtIS5JyP0g5M5oB7qor.mxc1s0qNxkIwNa1'
+	
 
 	# update shadow files if needed
 	if (( need_group_update )); then
