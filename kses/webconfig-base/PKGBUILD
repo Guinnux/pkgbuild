@@ -1,0 +1,28 @@
+pkgname=webconfig-base
+pkgver=2.6.0
+pkgrel=1
+pkgdesc="Guinnux webconfig base"
+arch=('any')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base')
+depends=('lua' 'lighttpd' 'lsqlite3' 'lua-filesystem')
+source=('webconfig-base::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
+        'gnx5-conf.patch')
+      
+md5sums=('SKIP'
+         'c9fbf4e19faaf984a61ccc6762c14681')
+
+prepare()
+{
+	cd $srcdir/$pkgname
+	patch -p0 < $srcdir/gnx5-conf.patch
+}
+
+
+package()
+{
+cd $srcdir/$pkgname/webconfig/guinnux_web_base
+cp -dvR ./srv "$pkgdir"/
+  
+}
