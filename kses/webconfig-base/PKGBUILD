@@ -11,8 +11,7 @@ source=('webconfig-base::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
         'gnx5-conf.patch')
       
 md5sums=('SKIP'
-         'c9fbf4e19faaf984a61ccc6762c14681')
-
+         '20f92b45f0a090a462cf8812c576f66a')
 prepare()
 {
 	cd $srcdir/$pkgname

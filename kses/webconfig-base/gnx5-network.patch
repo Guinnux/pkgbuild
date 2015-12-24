@@ -1,0 +1,198 @@
+--- webconfig/guinnux_web_base/srv/http/config/network_conf.lua 2015-12-24 11:51:24.097167650 +0200
++++ webconfig/guinnux_web_base/srv/http/config/network_conf-new.lua     2015-12-24 11:53:07.382995738 +0200
+@@ -28,3 +28,5 @@
+ dhcpd_stop = "sv stop dhcpd"
+ 
+ portforward_restart = "/etc/init.d/blackwall"
++
++netctl_profile_path = "/etc/netctl"
+--- webconfig/guinnux_web_base/srv/http/network_manage.lua      2015-12-24 11:51:24.120500793 +0200
++++ webconfig/guinnux_web_base/srv/http/network_manage-new.lua  2015-12-24 11:54:04.692529450 +0200
+@@ -22,15 +22,31 @@
+     intfName = cgi.get.interface or "unknown"
+ end
+ 
++
++--[[
+ allInterfaces = command.ex("cat "..network_conf.interface_file)
+ 
+ if allInterfaces == nil then allInterfaces = "" end
+ 
+ currIntf = allInterfaces:match("#%s*begin%s+"..intfName.."%s*\n%s*.-#%s*end%s+.-")
++]]
+ 
++currIntf = command.ex("cat "..network_conf.netctl_profile_path.."/"..intfName)
+ if (currIntf ~= nil) then
+-    ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
++    --ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
++    ifconfigResult = "Need to Sort this out"
+     interface = {}
++     method = currIntf:match("[^#]IP=(.-)\n") or "none"
++     interface.name = intfName
++     interface.method = method
++     address,netmask = currIntf:match("[^#]Address=%('(.-)/(.-)'%)\n") or "",""
++     gateway = currIntf:match("[^#]Gateway='(.-)'\n") or ""
++     interface.address = address
++     interface.netmask = netmask
++     interface.gateway = gateway
++     interface.enabled = command.ex("netctl is-enabled "..interface.name):match("(enabled)") or ""
++     interface.interface = currIntf:match("[^#]Interface=(.-)\n") or ""
++   --[[
+     method = currIntf:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
+     auto = currIntf:match("auto%s+"..intfName) or ""
+     interface.auto = auto
+@@ -43,7 +59,7 @@
+         provider = currIntf:match("provider%s+([^ \n]+).-")
+         interface.provider = provider
+     end
+-
++    ]]
+     if (saved == 1) then
+         newAddress = cgi.post.address or ""
+         newNetmask = cgi.post.netmask or ""
+@@ -55,6 +71,7 @@
+             newMethod = "static"
+         end
+         
++--[[        
+         newConfig = "#begin "..intfName.."\n"
+         newConfig = newConfig .. "auto "..intfName.."\n"
+         newConfig = newConfig .. "iface "..intfName.." inet "..newMethod.."\n"
+@@ -90,7 +107,7 @@
+         command.ex(network_conf.if_down.." "..intfName)        
+         command.writefile(network_conf.interface_file, result)
+         command.ex(network_conf.if_up.." "..intfName)
+-        
++]]        
+         interface.address = newAddress
+         interface.netmask = newNetmask
+         interface.gateway = newGateway
+@@ -207,7 +224,7 @@
+ 
+ if (interface ~= nil) then
+     content = content .. [[
+-                    <h3>Managing interface "]]..intfName..[["</h3>
++                    <h3>Managing Profile "]]..interface.name..[["</h3>
+                     <div class="formLayoutfull">
+                         <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
+                             <label for="dhcp">Obtain automatically from DHCP</label>
+@@ -232,7 +249,7 @@
+ ]]
+     end
+     content = content .. [[
+-                            <input type="hidden" name="interface" value="]]..intfName..[["/>
++                            <input type="hidden" name="interface" value="]]..interface.name..[["/>
+                             <hr>
+ ]]                            
+     if (saved == 1) then
+--- webconfig/guinnux_web_base/srv/http/network_interfaces.lua  2015-12-24 11:51:24.120500793 +0200
++++ webconfig/guinnux_web_base/srv/http/network_interfaces-new.lua      2015-12-24 11:53:42.929373271 +0200
+@@ -2,17 +2,41 @@
+ require("luamods/layout")
+ require("luamods/cgi")
+ require("config/network_conf")
++lfs = require("lfs")
+ 
+ header = layout.getHeader()
+ footer = layout.getFooter()
+ 
+ interfaces = {}
+ 
++interfaceCount = 0
++
++for file in lfs.dir(network_conf.netctl_profile_path) do
++    local f = network_conf.netctl_profile_path..'/'..file
++    local attr = lfs.attributes (f)
++    if attr.mode ~= "directory" then
++      interfaces[interfaceCount] = {}
++      interfaces[interfaceCount].name = file
++      config = command.ex("cat "..f)
++      interfaces[interfaceCount].config = config
++      interfaces[interfaceCount].method = config:match("[^#]IP=(.-)\n") or "none"
++      address,netmask = config:match("[^#]Address=%('(.-)/(.-)'%)\n") or {"",""}
++      gateway = config:match("[^#]Gateway='(.-)'\n") or ""
++      interfaces[interfaceCount].address = address
++      interfaces[interfaceCount].netmask = netmask
++      interfaces[interfaceCount].gateway = gateway
++      interfaces[interfaceCount].enabled = command.ex("netctl is-enabled "..file):match("(enabled)") or ""
++      interfaces[interfaceCount].interface = config:match("[^#]Interface=(.-)\n") or ""
++      interfaceCount = interfaceCount + 1
++    end
++end
++
++
++--[[
+ intf = command.ex("cat "..network_conf.interface_file)
+ 
+ if intf == nil then intf = "" end
+ 
+-interfaceCount = 0
+ for interface, config in (intf:gmatch("#%s*begin%s+([^\n]+)%s*\n%s*(.-)#%s*end%s+.-\n")) do
+     
+     interfaces[interfaceCount] = {}
+@@ -34,7 +58,7 @@
+     end
+     interfaceCount = interfaceCount + 1
+ end
+-
++]]
+ content = ""
+ 
+ content = [[
+@@ -50,17 +74,17 @@
+                     <div>
+                         <b><br>
+                         <center>
+-                            This is a list of all configurable network interfaces<br>
+-                            as they appear in "]]..network_conf.interface_file..[[".<br><br>
+-                            Click on the interface names to manage them.</b>
++                            This is a list of all network profiles<br>
++                            managed with netctl <br><br>
++                            Click on the profile names to manage them.</b>
+                         </center><br>
+                     
+                         <TABLE border="1" class="onetwo">
+                             <TR>
+-                                <TH>Interface name</TH>
++                                <TH>Profile name</TH>
+                                 <TH>Method</TH>
+-                                <TH>Auto</TH>
+-                                <TH>Up</TH>
++                                <TH>Enabled</TH>
++                                <TH>Link State</TH>
+                                 <TH>IP configuration</TH>
+                             </TR>
+ ]]
+@@ -70,11 +94,11 @@
+         v = interfaces[idx]
+         content = content .. [[
+                             <TR>
+-                                <TD><a href="network_manage.lua?interface=]]..k..[[">]]..k..[[<img src="images/spanner.png"/></a></TD>
++                                <TD><a href="network_manage.lua?interface=]]..k..[[">]]..k..[[ (]]..v.interface..[[)<img src="images/spanner.png"/></a></TD>
+                                 <TD>]]..v.method..[[</TD>
+ ]]
+ 
+-        if v.auto ~= nil then
++        if v.enabled == "enabled" then
+             content = content .. [[
+                                 <TD>Yes</TD>
+ ]]
+@@ -84,14 +108,15 @@
+ ]]
+         end
+ 
+-        local result = command.ex(network_conf.if_config.." "..k.." 2>&1")
++        local result = command.ex("ip link show dev "..v.interface.."  2>&1")
++        local if_state = result:match(".+state%s(%u-)%s.+") or "crap"
+         if (result:match("error fetching interface information") ~= nil) then
+             content = content .. [[
+                                 <TD>No</TD>
+ ]]
+         else
+             content = content .. [[
+-                                <TD>Yes</TD>
++                                <TD>]]..if_state..[[</TD>
+ ]]
+         end
+ 
+     
