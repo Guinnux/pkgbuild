@@ -1,92 +1,5 @@
---- webconfig/guinnux_web_base/srv/http/config/network_conf.lua 2015-12-24 11:51:24.097167650 +0200
-+++ webconfig/guinnux_web_base/srv/http/config/network_conf-new.lua     2015-12-24 11:53:07.382995738 +0200
-@@ -28,3 +28,5 @@
- dhcpd_stop = "sv stop dhcpd"
- 
- portforward_restart = "/etc/init.d/blackwall"
-+
-+netctl_profile_path = "/etc/netctl"
---- webconfig/guinnux_web_base/srv/http/network_manage.lua      2015-12-24 11:51:24.120500793 +0200
-+++ webconfig/guinnux_web_base/srv/http/network_manage-new.lua  2015-12-24 11:54:04.692529450 +0200
-@@ -22,15 +22,31 @@
-     intfName = cgi.get.interface or "unknown"
- end
- 
-+
-+--[[
- allInterfaces = command.ex("cat "..network_conf.interface_file)
- 
- if allInterfaces == nil then allInterfaces = "" end
- 
- currIntf = allInterfaces:match("#%s*begin%s+"..intfName.."%s*\n%s*.-#%s*end%s+.-")
-+]]
- 
-+currIntf = command.ex("cat "..network_conf.netctl_profile_path.."/"..intfName)
- if (currIntf ~= nil) then
--    ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
-+    --ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
-+    ifconfigResult = "Need to Sort this out"
-     interface = {}
-+     method = currIntf:match("[^#]IP=(.-)\n") or "none"
-+     interface.name = intfName
-+     interface.method = method
-+     address,netmask = currIntf:match("[^#]Address=%('(.-)/(.-)'%)\n") or "",""
-+     gateway = currIntf:match("[^#]Gateway='(.-)'\n") or ""
-+     interface.address = address
-+     interface.netmask = netmask
-+     interface.gateway = gateway
-+     interface.enabled = command.ex("netctl is-enabled "..interface.name):match("(enabled)") or ""
-+     interface.interface = currIntf:match("[^#]Interface=(.-)\n") or ""
-+   --[[
-     method = currIntf:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
-     auto = currIntf:match("auto%s+"..intfName) or ""
-     interface.auto = auto
-@@ -43,7 +59,7 @@
-         provider = currIntf:match("provider%s+([^ \n]+).-")
-         interface.provider = provider
-     end
--
-+    ]]
-     if (saved == 1) then
-         newAddress = cgi.post.address or ""
-         newNetmask = cgi.post.netmask or ""
-@@ -55,6 +71,7 @@
-             newMethod = "static"
-         end
-         
-+--[[        
-         newConfig = "#begin "..intfName.."\n"
-         newConfig = newConfig .. "auto "..intfName.."\n"
-         newConfig = newConfig .. "iface "..intfName.." inet "..newMethod.."\n"
-@@ -90,7 +107,7 @@
-         command.ex(network_conf.if_down.." "..intfName)        
-         command.writefile(network_conf.interface_file, result)
-         command.ex(network_conf.if_up.." "..intfName)
--        
-+]]        
-         interface.address = newAddress
-         interface.netmask = newNetmask
-         interface.gateway = newGateway
-@@ -207,7 +224,7 @@
- 
- if (interface ~= nil) then
-     content = content .. [[
--                    <h3>Managing interface "]]..intfName..[["</h3>
-+                    <h3>Managing Profile "]]..interface.name..[["</h3>
-                     <div class="formLayoutfull">
-                         <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
-                             <label for="dhcp">Obtain automatically from DHCP</label>
-@@ -232,7 +249,7 @@
- ]]
-     end
-     content = content .. [[
--                            <input type="hidden" name="interface" value="]]..intfName..[["/>
-+                            <input type="hidden" name="interface" value="]]..interface.name..[["/>
-                             <hr>
- ]]                            
-     if (saved == 1) then
---- webconfig/guinnux_web_base/srv/http/network_interfaces.lua  2015-12-24 11:51:24.120500793 +0200
-+++ webconfig/guinnux_web_base/srv/http/network_interfaces-new.lua      2015-12-24 11:53:42.929373271 +0200
+--- webconfig/guinnux_web_base/srv/http/network_interfaces.lua	2015-12-28 11:01:45.349851699 +0200
++++ webconfig/guinnux_web_base/srv/http/network_interfaces-new.lua	2015-12-28 11:05:46.972604381 +0200
 @@ -2,17 +2,41 @@
  require("luamods/layout")
  require("luamods/cgi")
@@ -195,4 +108,272 @@
  ]]
          end
  
-     
+--- webconfig/guinnux_web_base/srv/http/network_manage.lua	2015-12-29 10:37:48.469849615 +0200
++++ webconfig/guinnux_web_base/srv/http/network_manage-new.lua	2015-12-29 10:38:39.582667454 +0200
+@@ -22,28 +22,25 @@
+     intfName = cgi.get.interface or "unknown"
+ end
+ 
+-allInterfaces = command.ex("cat "..network_conf.interface_file)
+-
+-if allInterfaces == nil then allInterfaces = "" end
+-
+-currIntf = allInterfaces:match("#%s*begin%s+"..intfName.."%s*\n%s*.-#%s*end%s+.-")
+-
++local function msg(m)
++  command.ex([[echo "]]..m..[[" >> /var/log/lighttpd_cgi.log]])
++end
++currIntf = command.ex("cat "..network_conf.netctl_profile_path.."/"..intfName)
+ if (currIntf ~= nil) then
+-    ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
++    --ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
+     interface = {}
+-    method = currIntf:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
+-    auto = currIntf:match("auto%s+"..intfName) or ""
+-    interface.auto = auto
+-    interface.method = method
+-    if (method == "static") or (method == "dhcp") then
+-        interface.address = currIntf:match("address %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-        interface.netmask = currIntf:match("netmask %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-        interface.gateway = currIntf:match("gateway %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-    elseif (method == "ppp") then
+-        provider = currIntf:match("provider%s+([^ \n]+).-")
+-        interface.provider = provider
+-    end
+-
++     method = currIntf:match("[^#]IP=(.-)\n") or "none"
++     interface.name = intfName
++     interface.method = method
++     address = currIntf:match("[^#]Address=%('(.+)/(.+)'%)\n") or ""
++     netmask = currIntf:match("[^#]Address=%('.+/(.+)'%)\n") or ""
++     gateway = currIntf:match("[^#]Gateway='(.-)'\n") or ""
++     interface.address = address
++     interface.netmask = netmask
++     interface.gateway = gateway
++     interface.enabled = command.ex("netctl is-enabled "..interface.name):match("(enabled)") or ""
++     interface.interface = currIntf:match("[^#]Interface=(.-)\n") or ""
++ 
+     if (saved == 1) then
+         newAddress = cgi.post.address or ""
+         newNetmask = cgi.post.netmask or ""
+@@ -54,48 +51,56 @@
+         else
+             newMethod = "static"
+         end
++        if (cgi.post.profile == "enabled") then
++            newEnabled = "enabled"
++        else
++            newEnabled = ""
++        end
+         
+-        newConfig = "#begin "..intfName.."\n"
+-        newConfig = newConfig .. "auto "..intfName.."\n"
+-        newConfig = newConfig .. "iface "..intfName.." inet "..newMethod.."\n"
+-
+-        if (newMethod == "dhcp") then
+-            newConfig = newConfig .. "# Previously saved values (if any)\n"
+-            newConfig = newConfig .. "    # address "..newAddress.."\n"
+-            newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
+-            newConfig = newConfig .. "    # gateway "..newGateway.."\n"
++       if newAddress ~= interface.address or newNetmask ~= interface.netmask then
++          currIntf = currIntf:gsub("#Address","Address")
++          currIntf = currIntf:gsub("Address=.-\n","Address=('"..newAddress.."/"..newNetmask.."')\n")   
++       end
++
++      if newMethod ~= interface.method then
++          currIntf = currIntf:gsub("IP=.-\n","IP="..newMethod.."\n")
++      end 
++      
++      if newGateway ~= interface.gateway then
++         currIntf = currIntf:gsub("#Gateway","Gateway")
++         if newGateway ~= "" then
++            currIntf = currIntf:gsub("Gateway=.-\n","Gateway='"..newGateway.."'\n")
++         else
++            currIntf = currIntf:gsub("Gateway=.-\n","#Gateway=\n")
++         end
++      end
++
++     command.writefile(network_conf.netctl_profile_path.."/"..intfName, currIntf)
++
++     if newEnabled ~= interface.enabled then
++        if newEnabled == "enabled" then
++           command.ex([[netctl enable ]]..intfName)
+         else
+-            
+-            if (newAddress ~= "") then
+-                newConfig = newConfig .. "    address "..newAddress.."\n"
+-            else
+-                newConfig = newConfig .. "    # address "..newAddress.."\n"
+-            end
+-            
+-            if (newNetmask ~= "") then
+-                newConfig = newConfig .. "    netmask "..newNetmask.."\n"
+-            else
+-                newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
+-            end
+-            
+-            if (newGateway ~= "") then
+-                newConfig = newConfig .. "    gateway "..newGateway.."\n"
+-            else
+-                newConfig = newConfig .. "    # gateway "..newGateway.."\n"
+-            end
++           command.ex([[netctl disable ]]..intfName)
+         end
+-        newConfig = newConfig.."#end "..intfName
++     end
+ 
+-        result = allInterfaces:gsub("#begin "..intfName..".-#end "..intfName, newConfig)
+-        command.ex(network_conf.if_down.." "..intfName)        
+-        command.writefile(network_conf.interface_file, result)
+-        command.ex(network_conf.if_up.." "..intfName)
+-        
+         interface.address = newAddress
+         interface.netmask = newNetmask
+         interface.gateway = newGateway
+         interface.method = newMethod
++        interface.enabled = newEnabled
++        
++        if interface.enabled == "enabled" then
++           command.ex([[netctl restart ]]..intfName)
++        else
++           command.ex([[netctl stop ]]..intfName)
++        end
++        msg(currIntf)    
+     end
++    ifconfigResult = currIntf
++    
++    
+ else
+     -- Bail on error here
+     content = [[
+@@ -122,17 +127,17 @@
+                         function check(area)
+                         {
+                             var inputs = area.getElementsByTagName("input");
+-                            if (inputs[0].checked)
++                            if (!inputs[0].checked || inputs[1].checked)
+                             {
+-                                inputs[1].readOnly = true;
+                                 inputs[2].readOnly = true;
+                                 inputs[3].readOnly = true;
++                                inputs[4].readOnly = true;
+                             }
+                             else
+                             {
+-                                inputs[1].readOnly = false;
+                                 inputs[2].readOnly = false;
+                                 inputs[3].readOnly = false;
++                                inputs[4].readOnly = false;
+                             }
+                         }
+                         
+@@ -149,13 +154,27 @@
+                             }  
+                         }
+                         
++                        function ValidateNetmask(inputText)
++                        {
++                           var num = parseInt(inputText,10)
++                           console.log("Check NM")
++                           if (!isNaN(num) && num > 0 && num <= 32)
++                           {
++                              return true
++                           }
++                           else
++                           {
++                              return false
++                           }
++                        }
++                        
+                         function ValidateForm(form)
+                         {
+                             if (form.getAttribute('submitted')) return false;
+                             var inputs = form.getElementsByTagName("input");
+                             var loop;
+                             var errors = 0;
+-                            for (loop = 1; loop < 4; loop++)
++                            for (loop = 2; loop < 5; loop++)
+                             {
+                                 inputs[loop].removeAttribute("invalidIP");
+                                 var warn = document.getElementById("invalidIP_"+loop);
+@@ -164,11 +183,19 @@
+                                     warn.parentNode.removeChild(warn);
+                                 }
+ 
+-                                if ((inputs[loop].value != "") && (!ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
++                                if(loop != 3)
+                                 {
+-                                    //alert("Input " + loop + " has an invalid IP address! " + inputs[loop].value);
+-                                    inputs[loop].setAttribute("invalidIP","true");
+-                                    errors++;
++                                   if ((inputs[loop].value != "") && (!ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
++                                   {
++                                      //alert("Input " + loop + " has an invalid IP address! " + inputs[loop].value);
++                                      inputs[loop].setAttribute("invalidIP","true");
++                                      errors++;
++                                   }
++                                }
++                                else if ((inputs[loop].value != "") && !(ValidateNetmask(inputs[loop].value) || ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
++                                {
++                                      inputs[loop].setAttribute("invalidIP","true");
++                                      errors++;
+                                 }
+                                 
+                                 if (inputs[loop].getAttribute("invalidIP") === "true")
+@@ -207,32 +234,30 @@
+ 
+ if (interface ~= nil) then
+     content = content .. [[
+-                    <h3>Managing interface "]]..intfName..[["</h3>
++                    <h3>Managing Profile "]]..interface.name..[["</h3>
+                     <div class="formLayoutfull">
+                         <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
+-                            <label for="dhcp">Obtain automatically from DHCP</label>
++                            
+ ]]
+-    if interface.method == "dhcp" then
++    local dhcp_checked = ""
++    local enable_checked = ""
++    local read_only = inputControl
++    if interface.method == "dhcp" then dhcp_checked = "checked" end
++    if interface.enabled == "enabled" then enable_checked = "checked" end
++    if interface.method == "dhcp" or interface.enabled ~= "enabled" then read_only="readonly" end
+         content = content .. [[
+-                            <input type="checkbox" value="dhcp" name="method" id="dhcp" checked onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
+-                            <ul>
+-                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[[" readonly/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[[" readonly/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[[" readonly/></li>
+-                             </ul>
+-]]
+-    else
+-        content = content .. [[
+-                            <input type="checkbox" value="dhcp" name="method" id="dhcp" onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
++                            <label for="enable">Enable this profile</label>
++                            <input type="checkbox" value="enabled" name="profile" id="enable" ]]..enable_checked..[[ onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
++                            <label for="dhcp">Obtain automatically from DHCP</label>
++                            <input type="checkbox" value="dhcp" name="method" id="dhcp" ]]..dhcp_checked..[[ onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
+                             <ul>
+-                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[["]]..inputControl..[[/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[["]]..inputControl..[[/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[["]]..inputControl..[[/></li>
++                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[["]]..read_only..[[/></li>
++                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[["]]..read_only..[[/></li>
++                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[["]]..read_only..[[/></li>
+                             </ul>
+ ]]
+-    end
+     content = content .. [[
+-                            <input type="hidden" name="interface" value="]]..intfName..[["/>
++                            <input type="hidden" name="interface" value="]]..interface.name..[["/>
+                             <hr>
+ ]]                            
+     if (saved == 1) then
+--- webconfig/guinnux_web_base/srv/http/config/network_conf.lua	2015-12-29 10:42:31.033686199 +0200
++++ webconfig/guinnux_web_base/srv/http/config/network_conf-new.lua	2015-12-29 10:47:04.160994490 +0200
+@@ -28,3 +28,5 @@
+ dhcpd_stop = "sv stop dhcpd"
+ 
+ portforward_restart = "/etc/init.d/blackwall"
++
++netctl_profile_path = "/etc/netctl"
