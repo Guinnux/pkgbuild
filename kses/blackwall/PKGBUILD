@@ -1,13 +1,14 @@
 pkgname=blackwall
 pkgver=1.3.0
-pkgrel=1
+pkgrel=3
 pkgdesc="Blackwall port forwarding/NAT setup."
 arch=('any')
 backup=('etc/blackwall/blackwall.conf' 'etc/blackwall/forward')
 license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
-depends=('lua' 'gnxid' 'iptables')
+depends=('lua' 'gnxid' 'iptables' 'sed' 'coreutils')
+install=blackwall.install
 source=('blackwall::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
          )
       

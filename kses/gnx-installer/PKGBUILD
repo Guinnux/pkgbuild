@@ -1,6 +1,6 @@
 pkgname=gnx-installer
 pkgver=3.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Guinnux Installer Scripts"
 arch=('any')
 license=('LGPL')
@@ -11,10 +11,10 @@ source=('setup'
         'synch-config'
         'pkglist')
         
-md5sums=('ce4663fdfe509153d6986ef38bb54880'
+md5sums=('97fe4e4f4414658ecfe9c80ec69c914a'
          'ee2e49b1a76473242f3a8b3cdbb38751'
          'ab914d83f131c686e9d05fc85e18ddbf')
-                
+                                
 package()
 {
   install -D -m755 $srcdir/setup $pkgdir/usr/bin/setup

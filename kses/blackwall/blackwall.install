@@ -2,12 +2,17 @@
 
 post_install()
 {
+echo Installing blackwall
 cat <<EOF > /tmp/gnxid.sh
 #!/usr/bin/gnxid -s
 
+echo Setting local interface to \$GNX_LAN
 sed "s|IF_LOCAL.*|IF_LOCAL = \$GNX_LAN|g" -i /etc/blackwall/blackwall.conf
 
+echo Setting external interface to \$GNX_WAN
 sed "s|IF_EXTERNAL.*|IF_EXTERNAL = \$GNX_WAN|g" -i /etc/blackwall/blackwall.conf
 EOF
 gnxid -s /tmp/gnxid.sh
 }
+
+

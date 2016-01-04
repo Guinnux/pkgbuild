@@ -1,7 +1,7 @@
 Description='LAN ethernet connection'
-Interface=eth0
+Interface=eth1
 
-#BindsToInterfaces=eth0
+BindsToInterfaces=eth1
 #VLANID=4
 
 Connection=ethernet

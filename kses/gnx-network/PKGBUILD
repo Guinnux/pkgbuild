@@ -1,6 +1,6 @@
 pkgname=gnx-network
 pkgver=3.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Guinnux Networking Configuration Scripts"
 arch=('any')
 license=('LGPL')
@@ -14,10 +14,10 @@ source=('wan.template'
         'lan.template'
         'usb.template')
         
-md5sums=('ab4b15690f73a4944de6e478c97eff18'
-         '85e1968948d62a88ae6cd2765793cbec'
-         '0c1c90d80bfca022a8e1cce94c22498b')
-               
+
+md5sums=('8d8c3ad632097c1911ace4980be0dc55'
+         '59c48d74cbb5948bd637f7fad650fdfb'
+         '83886035713ee098b2568ca75453a220')                                                                                  
 package()
 {
   install -D -m644 $srcdir/wan.template $pkgdir/etc/netctl/wan

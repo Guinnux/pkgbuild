@@ -1,7 +1,9 @@
 Description='USB ethernet connection'
 Interface=usb0
+BindsToInterfaces=usb0
 Connection=ethernet
 IP=static
+SkipNoCarrier=yes
 Address=('192.168.5.1/24')
 #Gateway='192.168.5.1'
 

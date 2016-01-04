@@ -212,5 +212,6 @@ chroot $GNX_PATH systemctl enable lighttpd
 chroot $GNX_PATH systemctl enable dhcpd4
 chroot $GNX_PATH systemctl enable ntpdate
 chroot $GNX_PATH systemctl enable ntpd
+chroot $GNX_PATH systemctl enable blackwall
 
 

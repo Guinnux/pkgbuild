@@ -1,7 +1,7 @@
 Description='WAN ethernet connection'
 Interface=eth0
 
-#BindsToInterfaces=eth0
+BindsToInterfaces=eth0
 #VLANID=3
 
 Connection=ethernet
