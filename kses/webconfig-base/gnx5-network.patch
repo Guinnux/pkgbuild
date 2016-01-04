@@ -1,16 +1,209 @@
---- webconfig/guinnux_web_base/srv/http/network_interfaces.lua	2015-12-28 11:01:45.349851699 +0200
-+++ webconfig/guinnux_web_base/srv/http/network_interfaces-new.lua	2015-12-28 11:05:46.972604381 +0200
-@@ -2,17 +2,41 @@
- require("luamods/layout")
- require("luamods/cgi")
- require("config/network_conf")
+diff --git a/webconfig/guinnux_web_base/srv/http/config/network_conf.lua b/webconfig/guinnux_web_base/srv/http/config/network_conf.lua
+index 98b10e7..65c969c 100644
+--- a/webconfig/guinnux_web_base/srv/http/config/network_conf.lua
++++ b/webconfig/guinnux_web_base/srv/http/config/network_conf.lua
+@@ -24,7 +24,9 @@ if_down = "/sbin/ifdown"
+ -- interface up
+ if_up = "/sbin/ifup"
+ 
+-dhcpd_start = "sv start dhcpd"
+-dhcpd_stop = "sv stop dhcpd"
++dhcpd_start = "systemctl start dhcpd4"
++dhcpd_stop = "systemctl stop dhcpd4"
+ 
+-portforward_restart = "/etc/init.d/blackwall"
++portforward_restart = "systemctl restart blackwall"
++
++netctl_profile_path = "/etc/netctl"
+diff --git a/webconfig/guinnux_web_base/srv/http/network_interfaces.lua b/webconfig/guinnux_web_base/srv/http/network_interfaces.lua
+index 5a63b0a..d7bdfb0 100644
+--- a/webconfig/guinnux_web_base/srv/http/network_interfaces.lua
++++ b/webconfig/guinnux_web_base/srv/http/network_interfaces.lua
+@@ -1,173 +1,199 @@
+-require("luamods/command")
+-require("luamods/layout")
+-require("luamods/cgi")
+-require("config/network_conf")
+-
+-header = layout.getHeader()
+-footer = layout.getFooter()
+-
+-interfaces = {}
+-
+-intf = command.ex("cat "..network_conf.interface_file)
+-
+-if intf == nil then intf = "" end
+-
+-interfaceCount = 0
+-for interface, config in (intf:gmatch("#%s*begin%s+([^\n]+)%s*\n%s*(.-)#%s*end%s+.-\n")) do
+-    
+-    interfaces[interfaceCount] = {}
+-    interfaces[interfaceCount].config = config
+-    interfaces[interfaceCount].name = interface
+-    method = config:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
+-    auto = config:match("auto%s+"..interface) or ""
+-    up = config:match("up%s+(.-)\n") or ""
+-    down = config:match("down%s+(.-)\n") or ""
+-    interfaces[interfaceCount].auto = auto
+-    interfaces[interfaceCount].method = method
+-    if (method == "static") or (method == "dhcp") then
+-        interfaces[interfaceCount].address = config:match("address %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-        interfaces[interfaceCount].netmask = config:match("netmask %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-        interfaces[interfaceCount].gateway = config:match("gateway %s*(%d+%.%d+%.%d+%.%d+)") or ""
+-    elseif (method == "ppp") then
+-        provider = config:match("provider%s+([^ \n]+).-")
+-        interfaces[interfaceCount].provider = provider
+-    end
+-    interfaceCount = interfaceCount + 1
+-end
+-
+-content = ""
+-
+-content = [[
+-                    <div id="info">
+-                        <div style="background:url(images/network.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
+-                            <center><h1>Network - Interfaces</h1></center>
+-                        </div>
+-                    </div>
+-]]
+-
+-if (interfaceCount > 0) then
+-    content = content .. [[
+-                    <div>
+-                        <b><br>
+-                        <center>
+-                            This is a list of all configurable network interfaces<br>
+-                            as they appear in "]]..network_conf.interface_file..[[".<br><br>
+-                            Click on the interface names to manage them.</b>
+-                        </center><br>
+-                    
+-                        <TABLE border="1" class="onetwo">
+-                            <TR>
+-                                <TH>Interface name</TH>
+-                                <TH>Method</TH>
+-                                <TH>Auto</TH>
+-                                <TH>Up</TH>
+-                                <TH>IP configuration</TH>
+-                            </TR>
+-]]
+---    for k,v in pairs(interfaces) do
+-      for idx=0,interfaceCount-1 do
+-        k = interfaces[idx].name
+-        v = interfaces[idx]
+-        content = content .. [[
+-                            <TR>
+-                                <TD><a href="network_manage.lua?interface=]]..k..[[">]]..k..[[<img src="images/spanner.png"/></a></TD>
+-                                <TD>]]..v.method..[[</TD>
+-]]
+-
+-        if v.auto ~= nil then
+-            content = content .. [[
+-                                <TD>Yes</TD>
+-]]
+-        else
+-            content = content .. [[
+-                                <TD>No</TD>
+-]]
+-        end
+-
+-        local result = command.ex(network_conf.if_config.." "..k.." 2>&1")
+-        if (result:match("error fetching interface information") ~= nil) then
+-            content = content .. [[
+-                                <TD>No</TD>
+-]]
+-        else
+-            content = content .. [[
+-                                <TD>Yes</TD>
+-]]
+-        end
+-
+-            content = content..[[
+-                                <TD>
+-]]
+-
+-        if (v.method == "static") then
+-            local address
+-            local gateway
+-            local netmask
+-            if v.address ~= nil then address = v.address else address = "none" end
+-            if v.gateway ~= nil then gateway = v.gateway else gateway = "none" end
+-            if v.netmask ~= nil then netmask = v.netmask else netmask = "none" end
+-            content = content..[[
+-                                    <b>Address:</b> ]]..address..[[<BR>
+-                                    <b>Netmask:</b> ]]..netmask..[[<BR>
+-                                    <b>Gateway:</b> ]]..gateway..[[<BR>
+-]]
+-        elseif (v.method == "dhcp") then
+-            content = content..[[
+-                                    Obtain from DHCP
+-]]
+-        elseif (v.method == "ppp") then
+-            local provider
+-            if v.provider ~= nil then provider = v.provider else provider = "none" end
+-            content = content..[[
+-                                    Provider: ]]..provider..[[<BR>
+-]]
+-        end
+-
+-        content = content .. [[
+-                                </TD>
+-                            </TR>
+-]]                        
+-    end
+-
+-    content = content..[[
+-                        </TABLE>
+-                    </div>
+-]]
+-else
+-    content = content .. [[
+-                    <div id="info">
+-                        <center>
+-                            <h2><img src="images/warning.png"/> No interfaces found</h2>
+-                            Either the interfaces file "]]..network_conf.interface_file..[[" is missing or unreadable,<br>
+-                            or none of the interfaces have been marked as being configurable.<br><br>
+-                            <a href="network_status.lua">View network status</a> for more information.
+-                        </center>
+-                    </div>]]
+-end
+-
+-if (intf ~= "") and (intf ~= nil) then
+-    content = content .. [[
+-                    <script>
+-                        function toggleVis(target)
+-                        {
+-                            if (target.style.display == "none")
+-                            {
+-                                target.style.display = "inline-block";
+-                            }
+-                            else
+-                            {
+-                                target.style.display = "none";
+-                            }
+-                            return false;
+-                        }
+-                    </script>
+-                    <br><img src="images/magnify.png"/> <a href="javascript:void(0)" onclick="toggleVis(document.getElementById('fileContents'));">View ]]..network_conf.interface_file..[[</a></a><br>
+-                    <div id="fileContents" style="display: none;">
+-                        <pre class="formLayoutfull">
+-]]..intf..[[
+-                        </pre>
+-                    </div>
+-]]
+-end
+-
+-print(header..content..footer)
++require("luamods/command")
++require("luamods/layout")
++require("luamods/cgi")
++require("config/network_conf")
 +lfs = require("lfs")
- 
- header = layout.getHeader()
- footer = layout.getFooter()
- 
- interfaces = {}
- 
++
++header = layout.getHeader()
++footer = layout.getFooter()
++
++interfaces = {}
++
 +interfaceCount = 0
 +
 +for file in lfs.dir(network_conf.netctl_profile_path) do
@@ -22,7 +215,8 @@
 +      config = command.ex("cat "..f)
 +      interfaces[interfaceCount].config = config
 +      interfaces[interfaceCount].method = config:match("[^#]IP=(.-)\n") or "none"
-+      address,netmask = config:match("[^#]Address=%('(.-)/(.-)'%)\n") or {"",""}
++      address = config:match("[^#]Address=%('(.-)/(.-)'%)\n") or ""
++      netmask = config:match("[^#]Address=%('.-/(.-)'%)\n") or ""
 +      gateway = config:match("[^#]Gateway='(.-)'\n") or ""
 +      interfaces[interfaceCount].address = address
 +      interfaces[interfaceCount].netmask = netmask
@@ -35,99 +229,207 @@
 +
 +
 +--[[
- intf = command.ex("cat "..network_conf.interface_file)
- 
- if intf == nil then intf = "" end
- 
--interfaceCount = 0
- for interface, config in (intf:gmatch("#%s*begin%s+([^\n]+)%s*\n%s*(.-)#%s*end%s+.-\n")) do
-     
-     interfaces[interfaceCount] = {}
-@@ -34,7 +58,7 @@
-     end
-     interfaceCount = interfaceCount + 1
- end
--
++intf = command.ex("cat "..network_conf.interface_file)
++
++if intf == nil then intf = "" end
++
++for interface, config in (intf:gmatch("#%s*begin%s+([^\n]+)%s*\n%s*(.-)#%s*end%s+.-\n")) do
++    
++    interfaces[interfaceCount] = {}
++    interfaces[interfaceCount].config = config
++    interfaces[interfaceCount].name = interface
++    method = config:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
++    auto = config:match("auto%s+"..interface) or ""
++    up = config:match("up%s+(.-)\n") or ""
++    down = config:match("down%s+(.-)\n") or ""
++    interfaces[interfaceCount].auto = auto
++    interfaces[interfaceCount].method = method
++    if (method == "static") or (method == "dhcp") then
++        interfaces[interfaceCount].address = config:match("address %s*(%d+%.%d+%.%d+%.%d+)") or ""
++        interfaces[interfaceCount].netmask = config:match("netmask %s*(%d+%.%d+%.%d+%.%d+)") or ""
++        interfaces[interfaceCount].gateway = config:match("gateway %s*(%d+%.%d+%.%d+%.%d+)") or ""
++    elseif (method == "ppp") then
++        provider = config:match("provider%s+([^ \n]+).-")
++        interfaces[interfaceCount].provider = provider
++    end
++    interfaceCount = interfaceCount + 1
++end
 +]]
- content = ""
- 
- content = [[
-@@ -50,17 +74,17 @@
-                     <div>
-                         <b><br>
-                         <center>
--                            This is a list of all configurable network interfaces<br>
--                            as they appear in "]]..network_conf.interface_file..[[".<br><br>
--                            Click on the interface names to manage them.</b>
++content = ""
++
++content = [[
++                    <div id="info">
++                        <div style="background:url(images/network.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
++                            <center><h1>Network - Interfaces</h1></center>
++                        </div>
++                    </div>
++]]
++
++if (interfaceCount > 0) then
++    content = content .. [[
++                    <div>
++                        <b><br>
++                        <center>
 +                            This is a list of all network profiles<br>
 +                            managed with netctl <br><br>
 +                            Click on the profile names to manage them.</b>
-                         </center><br>
-                     
-                         <TABLE border="1" class="onetwo">
-                             <TR>
--                                <TH>Interface name</TH>
++                        </center><br>
++                    
++                        <TABLE border="1" class="onetwo">
++                            <TR>
 +                                <TH>Profile name</TH>
-                                 <TH>Method</TH>
--                                <TH>Auto</TH>
--                                <TH>Up</TH>
++                                <TH>Method</TH>
 +                                <TH>Enabled</TH>
 +                                <TH>Link State</TH>
-                                 <TH>IP configuration</TH>
-                             </TR>
- ]]
-@@ -70,11 +94,11 @@
-         v = interfaces[idx]
-         content = content .. [[
-                             <TR>
--                                <TD><a href="network_manage.lua?interface=]]..k..[[">]]..k..[[<img src="images/spanner.png"/></a></TD>
++                                <TH>IP configuration</TH>
++                            </TR>
++]]
++--    for k,v in pairs(interfaces) do
++      for idx=0,interfaceCount-1 do
++        k = interfaces[idx].name
++        v = interfaces[idx]
++        content = content .. [[
++                            <TR>
 +                                <TD><a href="network_manage.lua?interface=]]..k..[[">]]..k..[[ (]]..v.interface..[[)<img src="images/spanner.png"/></a></TD>
-                                 <TD>]]..v.method..[[</TD>
- ]]
- 
--        if v.auto ~= nil then
++                                <TD>]]..v.method..[[</TD>
++]]
++
 +        if v.enabled == "enabled" then
-             content = content .. [[
-                                 <TD>Yes</TD>
- ]]
-@@ -84,14 +108,15 @@
- ]]
-         end
- 
--        local result = command.ex(network_conf.if_config.." "..k.." 2>&1")
++            content = content .. [[
++                                <TD>Yes</TD>
++]]
++        else
++            content = content .. [[
++                                <TD>No</TD>
++]]
++        end
++
 +        local result = command.ex("ip link show dev "..v.interface.."  2>&1")
 +        local if_state = result:match(".+state%s(%u-)%s.+") or "crap"
-         if (result:match("error fetching interface information") ~= nil) then
-             content = content .. [[
-                                 <TD>No</TD>
- ]]
-         else
-             content = content .. [[
--                                <TD>Yes</TD>
++        if (result:match("error fetching interface information") ~= nil) then
++            content = content .. [[
++                                <TD>No</TD>
++]]
++        else
++            content = content .. [[
 +                                <TD>]]..if_state..[[</TD>
- ]]
-         end
- 
---- webconfig/guinnux_web_base/srv/http/network_manage.lua	2015-12-29 10:37:48.469849615 +0200
-+++ webconfig/guinnux_web_base/srv/http/network_manage-new.lua	2015-12-29 10:38:39.582667454 +0200
-@@ -22,28 +22,25 @@
-     intfName = cgi.get.interface or "unknown"
- end
- 
++]]
++        end
++
++            content = content..[[
++                                <TD>
++]]
++
++        if (v.method == "static") then
++            local address
++            local gateway
++            local netmask
++            if v.address ~= nil then address = v.address else address = "none" end
++            if v.gateway ~= nil then gateway = v.gateway else gateway = "none" end
++            if v.netmask ~= nil then netmask = v.netmask else netmask = "none" end
++            content = content..[[
++                                    <b>Address:</b> ]]..address..[[<BR>
++                                    <b>Netmask:</b> ]]..netmask..[[<BR>
++                                    <b>Gateway:</b> ]]..gateway..[[<BR>
++]]
++        elseif (v.method == "dhcp") then
++            content = content..[[
++                                    Obtain from DHCP
++]]
++        elseif (v.method == "ppp") then
++            local provider
++            if v.provider ~= nil then provider = v.provider else provider = "none" end
++            content = content..[[
++                                    Provider: ]]..provider..[[<BR>
++]]
++        end
++
++        content = content .. [[
++                                </TD>
++                            </TR>
++]]                        
++    end
++
++    content = content..[[
++                        </TABLE>
++                    </div>
++]]
++else
++    content = content .. [[
++                    <div id="info">
++                        <center>
++                            <h2><img src="images/warning.png"/> No interfaces found</h2>
++                            Either the interfaces file "]]..network_conf.interface_file..[[" is missing or unreadable,<br>
++                            or none of the interfaces have been marked as being configurable.<br><br>
++                            <a href="network_status.lua">View network status</a> for more information.
++                        </center>
++                    </div>]]
++end
++
++if (intf ~= "") and (intf ~= nil) then
++    content = content .. [[
++                    <script>
++                        function toggleVis(target)
++                        {
++                            if (target.style.display == "none")
++                            {
++                                target.style.display = "inline-block";
++                            }
++                            else
++                            {
++                                target.style.display = "none";
++                            }
++                            return false;
++                        }
++                    </script>
++                    <br><img src="images/magnify.png"/> <a href="javascript:void(0)" onclick="toggleVis(document.getElementById('fileContents'));">View ]]..network_conf.interface_file..[[</a></a><br>
++                    <div id="fileContents" style="display: none;">
++                        <pre class="formLayoutfull">
++]]..intf..[[
++                        </pre>
++                    </div>
++]]
++end
++
++print(header..content..footer)
+diff --git a/webconfig/guinnux_web_base/srv/http/network_manage.lua b/webconfig/guinnux_web_base/srv/http/network_manage.lua
+index 4bbf5ed..c6b55ee 100644
+--- a/webconfig/guinnux_web_base/srv/http/network_manage.lua
++++ b/webconfig/guinnux_web_base/srv/http/network_manage.lua
+@@ -1,269 +1,294 @@
+-require("luamods/command")
+-require("luamods/layout")
+-require("luamods/cgi")
+-require("config/network_conf")
+-
+-userLevel = db.getPriv(layout.username) or 1
+-if (userLevel == 1) then
+-    buttonControl = " disabled"
+-    inputControl = " readonly"
+-else
+-    buttonControl = ""
+-    inputControl = ""
+-end
+-
+-header = layout.getHeader()
+-footer = layout.getFooter()
+-
+-if (cgi.post.submitButton == "Save and Apply") and (userLevel ~= 1) then
+-    intfName = cgi.post.interface or "unknown"
+-    saved = 1
+-else
+-    intfName = cgi.get.interface or "unknown"
+-end
+-
 -allInterfaces = command.ex("cat "..network_conf.interface_file)
 -
 -if allInterfaces == nil then allInterfaces = "" end
 -
 -currIntf = allInterfaces:match("#%s*begin%s+"..intfName.."%s*\n%s*.-#%s*end%s+.-")
 -
-+local function msg(m)
-+  command.ex([[echo "]]..m..[[" >> /var/log/lighttpd_cgi.log]])
-+end
-+currIntf = command.ex("cat "..network_conf.netctl_profile_path.."/"..intfName)
- if (currIntf ~= nil) then
+-if (currIntf ~= nil) then
 -    ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
-+    --ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
-     interface = {}
+-    interface = {}
 -    method = currIntf:match("[^#]*%s*iface%s+.-%s+inet%s+(%w+)") or ""
 -    auto = currIntf:match("auto%s+"..intfName) or ""
 -    interface.auto = auto
@@ -141,6 +443,260 @@
 -        interface.provider = provider
 -    end
 -
+-    if (saved == 1) then
+-        newAddress = cgi.post.address or ""
+-        newNetmask = cgi.post.netmask or ""
+-        newGateway = cgi.post.gateway or ""
+-        
+-        if (cgi.post.method == "dhcp") then
+-            newMethod = "dhcp"
+-        else
+-            newMethod = "static"
+-        end
+-        
+-        newConfig = "#begin "..intfName.."\n"
+-        newConfig = newConfig .. "auto "..intfName.."\n"
+-        newConfig = newConfig .. "iface "..intfName.." inet "..newMethod.."\n"
+-
+-        if (newMethod == "dhcp") then
+-            newConfig = newConfig .. "# Previously saved values (if any)\n"
+-            newConfig = newConfig .. "    # address "..newAddress.."\n"
+-            newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
+-            newConfig = newConfig .. "    # gateway "..newGateway.."\n"
+-        else
+-            
+-            if (newAddress ~= "") then
+-                newConfig = newConfig .. "    address "..newAddress.."\n"
+-            else
+-                newConfig = newConfig .. "    # address "..newAddress.."\n"
+-            end
+-            
+-            if (newNetmask ~= "") then
+-                newConfig = newConfig .. "    netmask "..newNetmask.."\n"
+-            else
+-                newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
+-            end
+-            
+-            if (newGateway ~= "") then
+-                newConfig = newConfig .. "    gateway "..newGateway.."\n"
+-            else
+-                newConfig = newConfig .. "    # gateway "..newGateway.."\n"
+-            end
+-        end
+-        newConfig = newConfig.."#end "..intfName
+-
+-        result = allInterfaces:gsub("#begin "..intfName..".-#end "..intfName, newConfig)
+-        command.ex(network_conf.if_down.." "..intfName)        
+-        command.writefile(network_conf.interface_file, result)
+-        command.ex(network_conf.if_up.." "..intfName)
+-        
+-        interface.address = newAddress
+-        interface.netmask = newNetmask
+-        interface.gateway = newGateway
+-        interface.method = newMethod
+-    end
+-else
+-    -- Bail on error here
+-    content = [[
+-                    <div id="info"><center><H1>Network - Manage Interface</H1></center></div>
+-                    <div id="info">
+-                        <center>
+-                            <h2><img src="images/warning.png"/> Cannot load interface details</h2>
+-                            An invalid interface was selected, or the interface has not been marked<br>
+-                            as being configurable in the interfaces file "]]..network_conf.interface_file..[["<br><br>
+-                            <a href="network_interfaces.lua">View network interfaces</a> | <a href="network_status.lua">View network status</a>
+-                        </center>
+-                    </div>
+-]]
+-    html = header..content..footer
+-    print(html)
+-    return        
+-end    
+-
+-content = ""
+-
+-content = [[
+-                    <script>
+-
+-                        function check(area)
+-                        {
+-                            var inputs = area.getElementsByTagName("input");
+-                            if (inputs[0].checked)
+-                            {
+-                                inputs[1].readOnly = true;
+-                                inputs[2].readOnly = true;
+-                                inputs[3].readOnly = true;
+-                            }
+-                            else
+-                            {
+-                                inputs[1].readOnly = false;
+-                                inputs[2].readOnly = false;
+-                                inputs[3].readOnly = false;
+-                            }
+-                        }
+-                        
+-                        function ValidateIPaddress(inputText)  
+-                        {  
+-                            var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+-                            if (inputText.match(ipformat))
+-                            {  
+-                                return true;  
+-                            }  
+-                            else  
+-                            {  
+-                                return false;  
+-                            }  
+-                        }
+-                        
+-                        function ValidateForm(form)
+-                        {
+-                            if (form.getAttribute('submitted')) return false;
+-                            var inputs = form.getElementsByTagName("input");
+-                            var loop;
+-                            var errors = 0;
+-                            for (loop = 1; loop < 4; loop++)
+-                            {
+-                                inputs[loop].removeAttribute("invalidIP");
+-                                var warn = document.getElementById("invalidIP_"+loop);
+-                                if (warn)
+-                                {
+-                                    warn.parentNode.removeChild(warn);
+-                                }
+-
+-                                if ((inputs[loop].value != "") && (!ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
+-                                {
+-                                    //alert("Input " + loop + " has an invalid IP address! " + inputs[loop].value);
+-                                    inputs[loop].setAttribute("invalidIP","true");
+-                                    errors++;
+-                                }
+-                                
+-                                if (inputs[loop].getAttribute("invalidIP") === "true")
+-                                {
+-                                    var warn = document.createElement("span");
+-                                    warn.id = "invalidIP_"+loop;
+-                                    warn.innerHTML = " <img src='images/warning.png' alt='Invalid IP' title='Invalid IP'/>";
+-                                    inputs[loop].parentNode.appendChild(warn);
+-                                }
+-                            }
+-                            if (errors)
+-                            {
+-                                alert("You have entered one or more invalid IP addresses.\nPlease fix the indicated addresses.");
+-                                return false;
+-                            }
+-                            else
+-                            {
+-                                form.setAttribute('submitted','true');
+-                                return true;
+-                            }
+-                        }
+-
+-                    </script>
+-                    <div id="info">
+-                        <div style="background:url(images/network.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
+-                            <center><h1>Network - Interfaces</h1></center>
+-                        </div>
+-                    </div>
+-]]
+-
+-if (userLevel == 1) then
+-    content = content .. [[
+-                    <center><b>Note:</B> Editing this section requires administrator privileges.</center><br>
+-]]                    
+-end
+-
+-if (interface ~= nil) then
+-    content = content .. [[
+-                    <h3>Managing interface "]]..intfName..[["</h3>
+-                    <div class="formLayoutfull">
+-                        <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
+-                            <label for="dhcp">Obtain automatically from DHCP</label>
+-]]
+-    if interface.method == "dhcp" then
+-        content = content .. [[
+-                            <input type="checkbox" value="dhcp" name="method" id="dhcp" checked onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
+-                            <ul>
+-                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[[" readonly/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[[" readonly/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[[" readonly/></li>
+-                             </ul>
+-]]
+-    else
+-        content = content .. [[
+-                            <input type="checkbox" value="dhcp" name="method" id="dhcp" onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
+-                            <ul>
+-                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[["]]..inputControl..[[/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[["]]..inputControl..[[/></li>
+-                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[["]]..inputControl..[[/></li>
+-                            </ul>
+-]]
+-    end
+-    content = content .. [[
+-                            <input type="hidden" name="interface" value="]]..intfName..[["/>
+-                            <hr>
+-]]                            
+-    if (saved == 1) then
+-        content = content .. [[
+-                            <br><b><img src="images/ok.png"/> Changes saved, but may take a few seconds to take effect.</b><br><br>
+-]]
+-    end
+-    content = content .. [[
+-                            <input type="button" name="backButton" value="Back to Interfaces" onclick="window.location.assign('network_interfaces.lua');"/>
+-                            <input type="Submit" name="submitButton" value="Save and Apply"]]..buttonControl..[[/>
+-                        </form>
+-                    </div>
+-                    <h3>Interface configuration</h3>
+-                    <pre class="formLayoutfull">
+-                    <!-- ifconfig start -->
+-]] 
+-.. ifconfigResult .. 
+-[[                  
+-                    <!-- ifconfig end -->
+-                    </pre>
+-]]
+-else
+-    content = content .. [[
+-                    <div id="info">
+-                        <center>
+-                            <h2><img src="images/warning.png"> No interfaces found</h2>
+-                            Either the interfaces file "]]..network_conf.interface_file..[[" is missing or unreadable,<br>
+-                            or none of the interfaces have been marked as being configurable.<br><br>
+-                            <a href="network_status.lua">View network status</a> for more information.
+-                        </center>
+-                    </div>]]
+-end
+-
+-print(header..content..footer)
++require("luamods/command")
++require("luamods/layout")
++require("luamods/cgi")
++require("config/network_conf")
++
++userLevel = db.getPriv(layout.username) or 1
++if (userLevel == 1) then
++    buttonControl = " disabled"
++    inputControl = " readonly"
++else
++    buttonControl = ""
++    inputControl = ""
++end
++
++header = layout.getHeader()
++footer = layout.getFooter()
++
++if (cgi.post.submitButton == "Save and Apply") and (userLevel ~= 1) then
++    intfName = cgi.post.interface or "unknown"
++    saved = 1
++else
++    intfName = cgi.get.interface or "unknown"
++end
++
++local function msg(m)
++  command.ex([[echo "]]..m..[[" >> /var/log/lighttpd_cgi.log]])
++end
++currIntf = command.ex("cat "..network_conf.netctl_profile_path.."/"..intfName)
++if (currIntf ~= nil) then
++    --ifconfigResult = command.ex(network_conf.if_config.." "..intfName.." 2>&1") or ""
++    interface = {}
 +     method = currIntf:match("[^#]IP=(.-)\n") or "none"
 +     interface.name = intfName
 +     interface.method = method
@@ -153,28 +709,22 @@
 +     interface.enabled = command.ex("netctl is-enabled "..interface.name):match("(enabled)") or ""
 +     interface.interface = currIntf:match("[^#]Interface=(.-)\n") or ""
 + 
-     if (saved == 1) then
-         newAddress = cgi.post.address or ""
-         newNetmask = cgi.post.netmask or ""
-@@ -54,48 +51,56 @@
-         else
-             newMethod = "static"
-         end
++    if (saved == 1) then
++        newAddress = cgi.post.address or ""
++        newNetmask = cgi.post.netmask or ""
++        newGateway = cgi.post.gateway or ""
++        
++        if (cgi.post.method == "dhcp") then
++            newMethod = "dhcp"
++        else
++            newMethod = "static"
++        end
 +        if (cgi.post.profile == "enabled") then
 +            newEnabled = "enabled"
 +        else
 +            newEnabled = ""
 +        end
-         
--        newConfig = "#begin "..intfName.."\n"
--        newConfig = newConfig .. "auto "..intfName.."\n"
--        newConfig = newConfig .. "iface "..intfName.." inet "..newMethod.."\n"
--
--        if (newMethod == "dhcp") then
--            newConfig = newConfig .. "# Previously saved values (if any)\n"
--            newConfig = newConfig .. "    # address "..newAddress.."\n"
--            newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
--            newConfig = newConfig .. "    # gateway "..newGateway.."\n"
++        
 +       if newAddress ~= interface.address or newNetmask ~= interface.netmask then
 +          currIntf = currIntf:gsub("#Address","Address")
 +          currIntf = currIntf:gsub("Address=.-\n","Address=('"..newAddress.."/"..newNetmask.."')\n")   
@@ -198,39 +748,15 @@
 +     if newEnabled ~= interface.enabled then
 +        if newEnabled == "enabled" then
 +           command.ex([[netctl enable ]]..intfName)
-         else
--            
--            if (newAddress ~= "") then
--                newConfig = newConfig .. "    address "..newAddress.."\n"
--            else
--                newConfig = newConfig .. "    # address "..newAddress.."\n"
--            end
--            
--            if (newNetmask ~= "") then
--                newConfig = newConfig .. "    netmask "..newNetmask.."\n"
--            else
--                newConfig = newConfig .. "    # netmask "..newNetmask.."\n"
--            end
--            
--            if (newGateway ~= "") then
--                newConfig = newConfig .. "    gateway "..newGateway.."\n"
--            else
--                newConfig = newConfig .. "    # gateway "..newGateway.."\n"
--            end
++        else
 +           command.ex([[netctl disable ]]..intfName)
-         end
--        newConfig = newConfig.."#end "..intfName
++        end
 +     end
- 
--        result = allInterfaces:gsub("#begin "..intfName..".-#end "..intfName, newConfig)
--        command.ex(network_conf.if_down.." "..intfName)        
--        command.writefile(network_conf.interface_file, result)
--        command.ex(network_conf.if_up.." "..intfName)
--        
-         interface.address = newAddress
-         interface.netmask = newNetmask
-         interface.gateway = newGateway
-         interface.method = newMethod
++
++        interface.address = newAddress
++        interface.netmask = newNetmask
++        interface.gateway = newGateway
++        interface.method = newMethod
 +        interface.enabled = newEnabled
 +        
 +        if interface.enabled == "enabled" then
@@ -239,38 +765,63 @@
 +           command.ex([[netctl stop ]]..intfName)
 +        end
 +        msg(currIntf)    
-     end
++    end
 +    ifconfigResult = currIntf
 +    
 +    
- else
-     -- Bail on error here
-     content = [[
-@@ -122,17 +127,17 @@
-                         function check(area)
-                         {
-                             var inputs = area.getElementsByTagName("input");
--                            if (inputs[0].checked)
++else
++    -- Bail on error here
++    content = [[
++                    <div id="info"><center><H1>Network - Manage Interface</H1></center></div>
++                    <div id="info">
++                        <center>
++                            <h2><img src="images/warning.png"/> Cannot load interface details</h2>
++                            An invalid interface was selected, or the interface has not been marked<br>
++                            as being configurable in the interfaces file "]]..network_conf.interface_file..[["<br><br>
++                            <a href="network_interfaces.lua">View network interfaces</a> | <a href="network_status.lua">View network status</a>
++                        </center>
++                    </div>
++]]
++    html = header..content..footer
++    print(html)
++    return        
++end    
++
++content = ""
++
++content = [[
++                    <script>
++
++                        function check(area)
++                        {
++                            var inputs = area.getElementsByTagName("input");
 +                            if (!inputs[0].checked || inputs[1].checked)
-                             {
--                                inputs[1].readOnly = true;
-                                 inputs[2].readOnly = true;
-                                 inputs[3].readOnly = true;
++                            {
++                                inputs[2].readOnly = true;
++                                inputs[3].readOnly = true;
 +                                inputs[4].readOnly = true;
-                             }
-                             else
-                             {
--                                inputs[1].readOnly = false;
-                                 inputs[2].readOnly = false;
-                                 inputs[3].readOnly = false;
++                            }
++                            else
++                            {
++                                inputs[2].readOnly = false;
++                                inputs[3].readOnly = false;
 +                                inputs[4].readOnly = false;
-                             }
-                         }
-                         
-@@ -149,13 +154,27 @@
-                             }  
-                         }
-                         
++                            }
++                        }
++                        
++                        function ValidateIPaddress(inputText)  
++                        {  
++                            var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
++                            if (inputText.match(ipformat))
++                            {  
++                                return true;  
++                            }  
++                            else  
++                            {  
++                                return false;  
++                            }  
++                        }
++                        
 +                        function ValidateNetmask(inputText)
 +                        {
 +                           var num = parseInt(inputText,10)
@@ -285,27 +836,23 @@
 +                           }
 +                        }
 +                        
-                         function ValidateForm(form)
-                         {
-                             if (form.getAttribute('submitted')) return false;
-                             var inputs = form.getElementsByTagName("input");
-                             var loop;
-                             var errors = 0;
--                            for (loop = 1; loop < 4; loop++)
++                        function ValidateForm(form)
++                        {
++                            if (form.getAttribute('submitted')) return false;
++                            var inputs = form.getElementsByTagName("input");
++                            var loop;
++                            var errors = 0;
 +                            for (loop = 2; loop < 5; loop++)
-                             {
-                                 inputs[loop].removeAttribute("invalidIP");
-                                 var warn = document.getElementById("invalidIP_"+loop);
-@@ -164,11 +183,19 @@
-                                     warn.parentNode.removeChild(warn);
-                                 }
- 
--                                if ((inputs[loop].value != "") && (!ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
++                            {
++                                inputs[loop].removeAttribute("invalidIP");
++                                var warn = document.getElementById("invalidIP_"+loop);
++                                if (warn)
++                                {
++                                    warn.parentNode.removeChild(warn);
++                                }
++
 +                                if(loop != 3)
-                                 {
--                                    //alert("Input " + loop + " has an invalid IP address! " + inputs[loop].value);
--                                    inputs[loop].setAttribute("invalidIP","true");
--                                    errors++;
++                                {
 +                                   if ((inputs[loop].value != "") && (!ValidateIPaddress(inputs[loop].value)) && (!inputs[loop].readOnly))
 +                                   {
 +                                      //alert("Input " + loop + " has an invalid IP address! " + inputs[loop].value);
@@ -317,63 +864,99 @@
 +                                {
 +                                      inputs[loop].setAttribute("invalidIP","true");
 +                                      errors++;
-                                 }
-                                 
-                                 if (inputs[loop].getAttribute("invalidIP") === "true")
-@@ -207,32 +234,30 @@
- 
- if (interface ~= nil) then
-     content = content .. [[
--                    <h3>Managing interface "]]..intfName..[["</h3>
++                                }
++                                
++                                if (inputs[loop].getAttribute("invalidIP") === "true")
++                                {
++                                    var warn = document.createElement("span");
++                                    warn.id = "invalidIP_"+loop;
++                                    warn.innerHTML = " <img src='images/warning.png' alt='Invalid IP' title='Invalid IP'/>";
++                                    inputs[loop].parentNode.appendChild(warn);
++                                }
++                            }
++                            if (errors)
++                            {
++                                alert("You have entered one or more invalid IP addresses.\nPlease fix the indicated addresses.");
++                                return false;
++                            }
++                            else
++                            {
++                                form.setAttribute('submitted','true');
++                                return true;
++                            }
++                        }
++
++                    </script>
++                    <div id="info">
++                        <div style="background:url(images/network.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
++                            <center><h1>Network - Interfaces</h1></center>
++                        </div>
++                    </div>
++]]
++
++if (userLevel == 1) then
++    content = content .. [[
++                    <center><b>Note:</B> Editing this section requires administrator privileges.</center><br>
++]]                    
++end
++
++if (interface ~= nil) then
++    content = content .. [[
 +                    <h3>Managing Profile "]]..interface.name..[["</h3>
-                     <div class="formLayoutfull">
-                         <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
--                            <label for="dhcp">Obtain automatically from DHCP</label>
++                    <div class="formLayoutfull">
++                        <form action="network_manage.lua" method="post" onsubmit="return ValidateForm(this);">
 +                            
- ]]
--    if interface.method == "dhcp" then
++]]
 +    local dhcp_checked = ""
 +    local enable_checked = ""
 +    local read_only = inputControl
 +    if interface.method == "dhcp" then dhcp_checked = "checked" end
 +    if interface.enabled == "enabled" then enable_checked = "checked" end
 +    if interface.method == "dhcp" or interface.enabled ~= "enabled" then read_only="readonly" end
-         content = content .. [[
--                            <input type="checkbox" value="dhcp" name="method" id="dhcp" checked onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
--                            <ul>
--                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[[" readonly/></li>
--                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[[" readonly/></li>
--                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[[" readonly/></li>
--                             </ul>
--]]
--    else
--        content = content .. [[
--                            <input type="checkbox" value="dhcp" name="method" id="dhcp" onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
++        content = content .. [[
 +                            <label for="enable">Enable this profile</label>
 +                            <input type="checkbox" value="enabled" name="profile" id="enable" ]]..enable_checked..[[ onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
 +                            <label for="dhcp">Obtain automatically from DHCP</label>
 +                            <input type="checkbox" value="dhcp" name="method" id="dhcp" ]]..dhcp_checked..[[ onchange="check(this.parentNode);"]]..buttonControl..[[/><br>
-                             <ul>
--                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[["]]..inputControl..[[/></li>
--                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[["]]..inputControl..[[/></li>
--                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[["]]..inputControl..[[/></li>
++                            <ul>
 +                                <li><label style="display: inline-block; width: 120px;">IP address:</label> <input type="text" name="address" value="]]..interface.address..[["]]..read_only..[[/></li>
 +                                <li><label style="display: inline-block; width: 120px;">Netmask:</label> <input type="text" name="netmask" value="]]..interface.netmask..[["]]..read_only..[[/></li>
 +                                <li><label style="display: inline-block; width: 120px;">Gateway:</label> <input type="text" name="gateway" value="]]..interface.gateway..[["]]..read_only..[[/></li>
-                             </ul>
- ]]
--    end
-     content = content .. [[
--                            <input type="hidden" name="interface" value="]]..intfName..[["/>
++                            </ul>
++]]
++    content = content .. [[
 +                            <input type="hidden" name="interface" value="]]..interface.name..[["/>
-                             <hr>
- ]]                            
-     if (saved == 1) then
---- webconfig/guinnux_web_base/srv/http/config/network_conf.lua	2015-12-29 10:42:31.033686199 +0200
-+++ webconfig/guinnux_web_base/srv/http/config/network_conf-new.lua	2015-12-29 10:47:04.160994490 +0200
-@@ -28,3 +28,5 @@
- dhcpd_stop = "sv stop dhcpd"
- 
- portforward_restart = "/etc/init.d/blackwall"
++                            <hr>
++]]                            
++    if (saved == 1) then
++        content = content .. [[
++                            <br><b><img src="images/ok.png"/> Changes saved, but may take a few seconds to take effect.</b><br><br>
++]]
++    end
++    content = content .. [[
++                            <input type="button" name="backButton" value="Back to Interfaces" onclick="window.location.assign('network_interfaces.lua');"/>
++                            <input type="Submit" name="submitButton" value="Save and Apply"]]..buttonControl..[[/>
++                        </form>
++                    </div>
++                    <h3>Interface configuration</h3>
++                    <pre class="formLayoutfull">
++                    <!-- ifconfig start -->
++]] 
++.. ifconfigResult .. 
++[[                  
++                    <!-- ifconfig end -->
++                    </pre>
++]]
++else
++    content = content .. [[
++                    <div id="info">
++                        <center>
++                            <h2><img src="images/warning.png"> No interfaces found</h2>
++                            Either the interfaces file "]]..network_conf.interface_file..[[" is missing or unreadable,<br>
++                            or none of the interfaces have been marked as being configurable.<br><br>
++                            <a href="network_status.lua">View network status</a> for more information.
++                        </center>
++                    </div>]]
++end
 +
-+netctl_profile_path = "/etc/netctl"
++print(header..content..footer)

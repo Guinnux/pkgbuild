@@ -9,20 +9,17 @@ groups=('base')
 depends=('lua' 'lighttpd' 'lsqlite3' 'lua-filesystem')
 source=('webconfig-base::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
         'gnx5-conf.patch'
-        'gnx5-network.patch'
-        'gnx5-dhcpd.patch')
+        'gnx5-network.patch')
       
 md5sums=('SKIP'
          'a3c658ce6cd2d25909b5b4ee95869aa8'
-         '33ee9b02efc49ec0b9f384f4bc8d7c7d'
-         '313f99795092f31fb03af7bb0f720d3a')
-                
+         'dc8ca224e5bd9060ca6884a5b9709664')
+
 prepare()
 {
 	cd $srcdir/$pkgname
 	patch -p0 < $srcdir/gnx5-conf.patch
-	patch -p0 < $srcdir/gnx5-network.patch
-	patch -p0 < $srcdir/gnx5-dhcpd.patch
+	patch -p1 < $srcdir/gnx5-network.patch
 }
 
 
