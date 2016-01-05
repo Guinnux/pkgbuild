@@ -1,0 +1,500 @@
+diff --git a/webconfig/guinnux_web_base/srv/http/config/software_conf.lua b/webconfig/guinnux_web_base/srv/http/config/software_conf.lua
+index 9cf7780..d742c55 100644
+--- a/webconfig/guinnux_web_base/srv/http/config/software_conf.lua
++++ b/webconfig/guinnux_web_base/srv/http/config/software_conf.lua
+@@ -1,10 +1,10 @@
+ module("software_conf", package.seeall)
+ 
+-opkg_conf_path = "/etc/opkg/opkg.conf"
++opkg_conf_path = "/etc/pacman.conf"
+ 
+-opkg_all_pack = "opkg-cl list"
++opkg_all_pack = "pacman -Ss"
+ 
+-opkg_installed_pack = "opkg-cl list-installed"
++opkg_installed_pack = "pacman -Q"
+ 
+ opkg_update = "opkg-cl update"
+ 
+@@ -12,4 +12,8 @@ opkg_install = "opkg-cl install"
+ 
+ opkg_uninstall = "opkg-cl remove"
+ 
+-opkg_info = "opkg-cl info"
++opkg_info = "pacman -Si"
++
++opkg_update_needed = "pacman -Qu"
++
++opkg_mirror_list = "/etc/pacman.d/mirrorlist"
+diff --git a/webconfig/guinnux_web_base/srv/http/modsxml/software.xml b/webconfig/guinnux_web_base/srv/http/modsxml/software.xml
+index 05979e2..d1d1d1e 100644
+--- a/webconfig/guinnux_web_base/srv/http/modsxml/software.xml
++++ b/webconfig/guinnux_web_base/srv/http/modsxml/software.xml
+@@ -8,8 +8,8 @@
+ 		<link_exe>software_sources.lua</link_exe>
+ 	</link>
+ 	<link>
+-		<link_name>All Packages</link_name>
+-		<link_exe>software_all.lua</link_exe>
++		<link_name>Status</link_name>
++		<link_exe>software_status.lua</link_exe>
+ 	</link>
+ 	<link>
+ 		<link_name>Installed Packages</link_name>
+diff --git a/webconfig/guinnux_web_base/srv/http/software_export_installed.lua b/webconfig/guinnux_web_base/srv/http/software_export_installed.lua
+index 2f57a2c..1298075 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_export_installed.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_export_installed.lua
+@@ -12,12 +12,11 @@ rtr = command.ex(software_conf.opkg_installed_pack)
+ if (rtr == nil) then rtr = "" end
+ packages = {}
+ for line in rtr:gmatch("(.-\n)") do
+-    name,version,desc = line:match("([^%s]+) %- ([^%s]+)%s*%-?%s*([^\n]*)\n")
++    name,version = line:match("(.-)%s+(.-)\n")
+     if (name ~= nil) and (version ~= nil) then
+         package = {}
+         package.name = name
+         package.version = version
+-        package.desc = desc or ""
+         table.insert(packages, package)
+     end
+ end
+@@ -26,6 +25,6 @@ print("Content-type: application/octet-stream")
+ print("Content-Disposition: attachment; filename=\"all_pkgs.csv\"")
+ print("")
+ 
+-for num,package in pairs(packages) do
+-    print(package.name..","..package.version..","..package.desc)
++for num,package in ipairs(packages) do
++    print(package.name..","..package.version)
+ end
+diff --git a/webconfig/guinnux_web_base/srv/http/software_installed.lua b/webconfig/guinnux_web_base/srv/http/software_installed.lua
+index 268462b..18803dc 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_installed.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_installed.lua
+@@ -16,12 +16,11 @@ function parsePackages()
+     if (rtr == nil) then rtr = "" end
+     packages = {}
+     for line in rtr:gmatch("(.-\n)") do
+-        name,version,desc = line:match("([^%s]+) %- ([^%s]+)%s*%-?%s*([^\n]*)\n")
++        name,version = line:match("(.-)%s+(.-)\n")
+         if (name ~= nil) and (version ~= nil) then
+             package = {}
+             package.name = name
+             package.version = version
+-            --package.desc = desc or ""
+             table.insert(packages, package)
+         end
+     end
+@@ -56,7 +55,7 @@ if (pkgCount > 0) then
+     for num, package in pairs(pkgs) do
+         content = content .. [[
+                             <tr>
+-                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[">]]..package.name..[[</a></td>
++                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[&installed=installed&upgrade=up-to-date">]]..package.name..[[</a></td>
+                                 <td style="white-space:nowrap;">]]..package.version..[[</td>
+                             </tr>
+ ]]                            
+diff --git a/webconfig/guinnux_web_base/srv/http/software_pkg_info.lua b/webconfig/guinnux_web_base/srv/http/software_pkg_info.lua
+index ef31392..651e127 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_pkg_info.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_pkg_info.lua
+@@ -24,9 +24,13 @@ footer = layout.getFooter()
+ if (cgi.post.installButton == nil) then
+     pkgName = cgi.get.name
+     pkgVer = cgi.get.version
++    pkgInstalled = cgi.get.installed
++    pkgUpgrade = cgi.get.upgrade
+ else
+     pkgName = cgi.post.name
+     pkgVer = cgi.post.version
++    pkgInstalled = cgi.post.installed
++    pkgUpgrade = cgi.post.upgrade
+ end    
+ 
+ if (pkgName == "") then pkgName = nil end
+@@ -69,7 +73,14 @@ if (userLevel ~= 1) then
+ end    
+ 
+ allInfo = command.ex(software_conf.opkg_info.." "..pkgName)
+-
++matchedPkg = {}
++matchedPkg.status = pkgInstalled
++matchedPkg.filename = "Does not matter"
++matchedPkg.size= "Size really does not matter"
++matchedPkg.upgrade = pkgUpgrade
++command.ex([[echo "]]..allInfo..[[" > /var/log/lighttpd_cgi.log]])
++infoLines = command.split("\n",allInfo)
++--[[
+ for pkgInfo in allInfo:gmatch("%s*(Package:.-)\n\n") do
+     for tmpName, tmpVer in pkgInfo:gmatch("Package:%s*([^\n]+)%s*\nVersion:%s*([^\n]+)%s*\n") do
+         if (tmpName == pkgName) and (tmpVer == pkgVer) then
+@@ -88,7 +99,7 @@ for pkgInfo in allInfo:gmatch("%s*(Package:.-)\n\n") do
+         end
+     end
+ end
+-
++]]
+ if (matchedPkg == nil) then
+     -- Bail on error
+     content = [[
+@@ -135,21 +146,26 @@ if (userLevel == 1) then
+ ]]                    
+ end
+ 
++
+ content = content..[[
+-                    <div class="formLayoutfull">
+-                        <b>Package name: </b>]]..pkgName..[[<br>
+-                        <b>Version: </b>]]..pkgVer..[[<br>
+-                        <b>Dependencies: </b>]]..matchedPkg.depends..[[<br>
+-                        <b>Provides: </b>]]..matchedPkg.provides..[[<br>
+-                        <b>Status: </b>]]..matchedPkg.status..[[<br>
+-                        <b>Section: </b>]]..matchedPkg.section..[[<br>
+-                        <b>Architecture: </b>]]..matchedPkg.arch..[[<br>
+-                        <b>Maintainer: </b>]]..matchedPkg.maintainer..[[<br>
+-                        <b>MD5 Sum: </b>]]..matchedPkg.md5..[[<br>
+-                        <b>Size: </b>]]..matchedPkg.size..[[<br>
+-                        <b>Filename: </b>]]..matchedPkg.filename..[[<br>
+-                        <b>Source: </b>]]..matchedPkg.source..[[<br>
+-                        <b>Description: </b>]]..matchedPkg.desc..[[<br>
++                    <div class="formLayoutfull">]]
++                     for k,line in ipairs(infoLines) do
++content = content..[[<b>]]..line..[[</b><br>]]                     
++                     end   
++                        --<b>Package name: </b>]]..pkgName..[[<br>
++                        --<b>Version: </b>]]..pkgVer..[[<br>
++                        --<b>Dependencies: </b>]]..matchedPkg.depends..[[<br>
++                        --<b>Provides: </b>]]..matchedPkg.provides..[[<br>
++                        --<b>Status: </b>]]..matchedPkg.status..[[<br>
++                        --<b>Section: </b>]]..matchedPkg.section..[[<br>
++                        --<b>Architecture: </b>]]..matchedPkg.arch..[[<br>
++                        --<b>Maintainer: </b>]]..matchedPkg.maintainer..[[<br>
++                        --<b>MD5 Sum: </b>]]..matchedPkg.md5..[[<br>
++                        --<b>Size: </b>]]..matchedPkg.size..[[<br>
++                        --<b>Filename: </b>]]..matchedPkg.filename..[[<br>
++                        --<b>Source: </b>]]..matchedPkg.source..[[<br>
++                        --<b>Description: </b>]]..matchedPkg.desc..[[<br>
++content = content..[[                        
+                     </div>
+                     <br>
+                     <form action="software_pkg_info.lua" method="post">
+@@ -157,17 +173,16 @@ content = content..[[
+                         <input type="hidden" name="version" value="]]..pkgVer..[["/>
+ ]]
+ 
+-if (matchedPkg.status ~= "") then installStatus = matchedPkg.status:find("not%-installed") end
+-if (installStatus == nil) then
+-    if (matchedPkg.filename ~= "") and (matchedPkg.size ~= "") then
++if (matchedPkg.status == "installed") then
++    if matchedPkg.upgrade == "up-to-date" then
+         content = content..[[
+-                        This package is installed.<br>
++                        This package is installed and up to date.<br>
+                         <input type="submit" value="Reinstall" name="installButton" onclick="return confirm('Are you sure you want to reinstall this package?');"]]..buttonControl..[[/>
+                         <input type="submit" value="Uninstall" name="installButton" onclick="return confirm('Are you sure you want to remove this package?');"]]..buttonControl..[[/>
+ ]]
+     else
+         content = content..[[
+-                        The package is installed, but this version is no longer available in the repository.<br>
++                        The package is installed, but the version is not up to date.<br>
+                         Either a newer version is available for installation, or the package has been deprecated.<br><br>
+                         <input type="submit" value="Reinstall" name="installButton" onclick="return confirm('This will look for a newer version of the package and install it. Proceed?');"]]..buttonControl..[[/>
+                         <input type="submit" value="Uninstall" name="installButton" onclick="return confirm('Are you sure you want to remove this package?');"]]..buttonControl..[[/>]]
+diff --git a/webconfig/guinnux_web_base/srv/http/software_search.lua b/webconfig/guinnux_web_base/srv/http/software_search.lua
+index f062e2d..dbf2b6a 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_search.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_search.lua
+@@ -29,7 +29,7 @@ content = [[
+                             xmlhttp.open("POST",url,true);
+                             xmlhttp.send();
+                             // Timeout to abort in 3 seconds
+-                            xmlHttpTimeout=setTimeout(ajaxTimeout, 3000);
++                            xmlHttpTimeout=setTimeout(ajaxTimeout, 15000);
+                             document.getElementById("myDiv").innerHTML = "<br><b>Searching...</b> <img src=\"images/spinner.gif\" width=20 height=20 />";
+                         }
+ 
+diff --git a/webconfig/guinnux_web_base/srv/http/software_search_ajax.lua b/webconfig/guinnux_web_base/srv/http/software_search_ajax.lua
+index d2739a8..65ad37d 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_search_ajax.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_search_ajax.lua
+@@ -3,20 +3,26 @@ require("luamods/command")
+ require("config/software_conf")
+ 
+ function parsePackages(searchTerm)
+-    rtr = command.ex(software_conf.opkg_all_pack.." *"..searchTerm.."*")
++    rtr = command.ex(software_conf.opkg_all_pack.." "..searchTerm)
+ 
+     if (rtr == nil) then rtr = "" end
+     packages = {}
+-    for line in rtr:gmatch("(.-\n)") do
+-        name,version,desc = line:match("([^%s]+) %- ([^%s]+)%s*%-?%s*([^\n]*)\n")
+-        if (name ~= nil) and (version ~= nil) then
+-            package = {}
+-            package.name = name
+-            package.version = version
+-            package.desc = desc or ""
+-            table.insert(packages, package)
+-        end
++    
++    for repo,pkg,ver,desc in string.gmatch(rtr,"(.-)/(.-)%s(.-)\n(.-)\n") do
++       local installed = string.match(ver,"%[(installed).-%]") or "not-installed"
++       local upgrade = string.match(ver,"%[installed(.+)%]") or nil
++       ver = string.gsub(ver,"(%[installed.-%])","")
++       ver = string.gsub(ver,"(%(.-%))","")
++       ver = string.gsub(ver,"(%s)","")
++       package = {}
++       package.name = pkg
++       package.version = ver
++       package.desc = desc or ""
++       package.installed = installed
++       package.upgrade = upgrade or "up-to-date"
++       table.insert(packages, package)
+     end
++    
+     return packages, #(packages)
+ end
+ 
+@@ -62,7 +68,7 @@ if (pkgName ~= "") then
+         for num, package in pairs(pkgs) do
+             content = content .. [[
+                             <tr>
+-                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[">]]..package.name..[[</a></td>
++                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[&installed=]]..package.installed..[[&upgrade=]]..package.upgrade..[[">]]..package.name..[[</a></td>
+                                 <td style="white-space:nowrap;">]]..package.version..[[</td>
+                                 <td>]]..package.desc..[[</td>
+                             </tr>
+diff --git a/webconfig/guinnux_web_base/srv/http/software_sources.lua b/webconfig/guinnux_web_base/srv/http/software_sources.lua
+index c5f0342..da9242c 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_sources.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_sources.lua
+@@ -53,30 +53,22 @@ if (cgi.post.submitButton == "Save and Update") and (userLevel ~= 1) then
+ end
+ 
+ conf = command.ex("cat "..software_conf.opkg_conf_path) or ""
++mirrorlist = command.ex("cat "..software_conf.opkg_mirror_list) or ""
+ 
+ -- This works but I don't know why. Haha oh boy
+ sources = {}
+ archs = {}
+-for line in conf:gmatch("[^\r\n]+") do
+-    if (line:find("src") ~= nil) then
+-        src,href = line:match("[^#]*"):match("src%s+([^%s]+)%s+([^%s]+)")
+-        if (src ~= nil) and (href ~= nil) then
+-            entry = {}
+-            entry.source = src;
+-            entry.href = href;
+-            table.insert(sources, entry)
+-        end
+-    elseif (line:find("arch") ~= nil) then
+-        arch,prio = line:match("[^#]*"):match("arch%s+([^%s]+)%s+([^%s]+)")
+-        if (arch ~= nil) and (prio ~= nil) then
+-            entry = {}
+-            entry.arch = arch;
+-            entry.prio = prio;            
+-            table.insert(archs, entry)
+-        end
+-    end
++repos = {}
++mirrors = {}
++for repo in string.gmatch(conf,"[^# ]+%[(.-)%]\n") do
++   if repo ~= "options" then table.insert(repos,repo) end  
+ end
+ 
++for mirror in string.gmatch(mirrorlist,"[^# ]+Server%s*=%s*(.-)%s*\n") do
++    table.insert(mirrors,mirror)
++end
++
++
+ content = [[
+                     <div id="info">
+                         <div style="background:url(images/software.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
+@@ -143,13 +135,13 @@ else
+                                 if (field == "repo")
+                                 {
+                                     var li = document.createElement("li");
+-                                    li.innerHTML = "<input name=\"src"+(count/2+1)+"\" style=\"width:150px;\" placeholder=\"Source name\"/> <input name=\"href"+(count/2+1)+"\" style=\"width:300px;\" placeholder=\"Repository address\"/><a style=\"cursor:pointer;color:blue;\" onclick=\"removeField(this, '"+field+"');\"> <img src=\"images/trash.png\" alt=\"Delete\" title=\"Delete\"/></a>";
++                                    li.innerHTML = "<input name=\"src"+(count/2+1)+"\" style=\"width:150px;\" placeholder=\"Repository name\"/><a style=\"cursor:pointer;color:blue;\" onclick=\"removeField(this, '"+field+"');\"> <img src=\"images/trash.png\" alt=\"Delete\" title=\"Delete\"/></a>";
+                                     field_area.appendChild(li);
+                                 }
+                                 else if (field == "arch")
+                                 {
+                                     var li = document.createElement("li");
+-                                    li.innerHTML = "<input name=\"arch"+(count/2+1)+"\" style=\"width:150px;\" placeholder=\"Architecture name\"/> <input name=\"prio"+(count/2+1)+"\" style=\"width:50px;\" placeholder=\"Priority\"/><a style=\"cursor:pointer;color:blue;\" onclick=\"removeField(this, '"+field+"');\"> <img src=\"images/trash.png\" alt=\"Delete\" title=\"Delete\"/></a>";
++                                    li.innerHTML = "<input name=\"arch"+(count/2+1)+"\" style=\"width:400px;\" placeholder=\"Mirror URL\"/><a style=\"cursor:pointer;color:blue;\" onclick=\"removeField(this, '"+field+"');\"> <img src=\"images/trash.png\" alt=\"Delete\" title=\"Delete\"/></a>";
+                                     field_area.appendChild(li);
+                                 }
+                             }
+@@ -173,14 +165,15 @@ content = content .. [[
+                     <h3>Add and remove the repository sources where packages may be downloaded from.</h3>
+                     <div class="formLayoutfull">
+                         <form action="software_sources.lua" method="post">
+-                            <h3>List of repository sources</h3>
+-                            Enter the names of repository sources as well as the server addresses where they reside.<br>
++                            <h3>List of repositories</h3>
++                            Enter the names of repositories<br>
++                            The priority is provided by the order in which the repositories are listed
+                             <ol id="repo_list">
+ ]]
+-    if (#(sources) > 0) then
+-        for i = 1, #(sources)  do
++    if (#(repos) > 0) then
++        for i = 1, #(repos)  do
+             content = content .. [[
+-                                <li><input type="text" name="src]]..i..[[" value="]]..sources[i].source..[[" style="width: 150px;" placeholder="Source name"]]..inputControl..[[/> <input type="text" name="href]]..i..[[" value="]]..sources[i].href..[[" style="width: 300px;" placeholder="Repository address"]]..inputControl..[[/><a style="cursor:pointer;color:blue;" onclick="]]..scriptControl..[[removeField(this, 'repo');"> <img src="images/trash.png" alt="Delete" title="Delete"/></a></li>
++                                <li><input type="text" name="src]]..i..[[" value="]]..repos[i]..[[" style="width: 150px;" placeholder="Repository name"]]..inputControl..[[/> <a style="cursor:pointer;color:blue;" onclick="]]..scriptControl..[[removeField(this, 'repo');"> <img src="images/trash.png" alt="Delete" title="Delete"/></a></li>
+ ]]
+         end
+     end
+@@ -188,31 +181,30 @@ content = content .. [[
+                             </ol>
+                             <input type="button" value="Add Repository" onclick="addField('repo', 20);"]]..buttonControl..[[/>
+                             <br><br><hr>
+-                            <h3>List of supported architectures</h3>
+-                            Enter the names of architectures supported by this platform, as well as their priorities.<br>
+-                            Higher numbers have higher priorities.<br>
++                            <h3>List of Repository Mirrors</h3>
++                            Enter the mirror URLS here.<br>
+                             <ol id="arch_list">
+ ]]
+-    if (#(archs) > 0) then
+-        for i = 1, #(archs)  do
++    if (#(mirrors) > 0) then
++        for i = 1, #(mirrors)  do
+             if (i > 1) then
+             content = content .. [[
+-                                <li><input type="text" name="arch]]..i..[[" value="]]..archs[i].arch..[[" style="width: 150px;" placeholder="Architecture name"]]..inputControl..[[/> <input type="text" name="prio]]..i..[[" value="]]..archs[i].prio..[[" style="width: 50px;" placeholder="Priority"]]..inputControl..[[/><a style="cursor:pointer;color:blue;" onclick="]]..scriptControl..[[removeField(this, 'arch');"> <img src="images/trash.png" alt="Delete" title="Delete"/></a></li>
++                                <li><input type="text" name="arch]]..i..[[" value="]]..mirrors[i]..[[" style="width: 400px;" placeholder="Mirror URL"]]..inputControl..[[/><a style="cursor:pointer;color:blue;" onclick="]]..scriptControl..[[removeField(this, 'arch');"> <img src="images/trash.png" alt="Delete" title="Delete"/></a></li>
+ ]]
+             else
+             content = content .. [[
+-                                <li><input type="text" name="arch]]..i..[[" value="]]..archs[i].arch..[[" style="width: 150px;" placeholder="Architecture name"]]..inputControl..[[/> <input type="text" name="prio]]..i..[[" value="]]..archs[i].prio..[[" style="width: 50px;" placeholder="Priority"]]..inputControl..[[/></li>
++                                <li><input type="text" name="arch]]..i..[[" value="]]..mirrors[i]..[[" style="width: 400px;" placeholder="Mirror URL"]]..inputControl..[[/></li>
+ ]]
+             end
+         end
+     else
+             content = content .. [[
+-                                <li><input type="text" name="arch1" value="" style="width: 150px;" placeholder="Architecture name"]]..inputControl..[[/> <input type="text" name="prio1" value="" style="width: 50px;" placeholder="Priority"]]..inputControl..[[/></li>
++                                <li><input type="text" name="arch1" value="" style="width: 400px;" placeholder="Mirror URL"]]..inputControl..[[/></li>
+ ]]                            
+     end
+     content = content .. [[
+                             </ol>
+-                            <input type="button" value="Add Architecture" onclick="addField('arch', 20);"]]..buttonControl..[[/><br>
++                            <input type="button" value="Add Mirror" onclick="addField('arch', 20);"]]..buttonControl..[[/><br>
+                             <br><hr><br>
+ ]]                            
+ if (saved == 1) then
+diff --git a/webconfig/guinnux_web_base/srv/http/software_status.lua b/webconfig/guinnux_web_base/srv/http/software_status.lua
+index e710ef1..3a1f958 100644
+--- a/webconfig/guinnux_web_base/srv/http/software_status.lua
++++ b/webconfig/guinnux_web_base/srv/http/software_status.lua
+@@ -8,18 +8,29 @@ rtr = ""
+ header = layout.getHeader()
+ footer = layout.getFooter()
+ 
++testData = [[
++solid 5.16.0-1 -> 5.17.0-1
++sonnet 5.16.0-1 -> 5.17.0-2
++source-highlight 3.1.8-3 -> 3.1.8-5
++sqlitebrowser 3.7.0-1 -> 3.7.0-2
++step 15.08.3-1 -> 15.12.0-1
++strigi 0.7.8-7 -> 0.7.8-9
++subversion 1.9.2-1 -> 1.9.3-1
++taglib 1.10-1 -> 1.10-3
++tdb 1.3.7-1 -> 1.3.8-1
++]]
+ function parsePackages()
+-    rtr = command.ex(software_conf.opkg_all_pack)
+-    
++    rtr = command.ex(software_conf.opkg_update_needed)
++    --rtr = testData
+     if (rtr == nil) then rtr = "" end
+     packages = {}
+     for line in rtr:gmatch("(.-\n)") do
+-        name,version,desc = line:match("([^%s]+) %- ([^%s]+)%s*%-?%s*([^\n]*)\n")
++        name,version,newversion = line:match("(.-)%s+(.-)%s+%->%s+(.-)\n")
+         if (name ~= nil) and (version ~= nil) then
+             package = {}
+             package.name = name
+             package.version = version
+-            package.desc = desc or ""
++            package.newversion = newversion
+             table.insert(packages, package)
+         end
+     end
+@@ -29,7 +40,7 @@ end
+ content = [[
+                     <div id="info">
+                         <div style="background:url(images/software.png); background-size:32px; background-repeat:no-repeat; background-position: 20px center;">
+-                            <center><h1>Software - All Available Packages</h1></center>
++                            <center><h1>Software - Current Status</h1></center>
+                         </div>
+                     </div>
+ ]]
+@@ -41,30 +52,30 @@ if (pkgCount > 0) then
+                     <div>
+                         <b><br>
+                         <center>
+-                            This is a list of all the software packages available on the repository server.<br>
++                            This is a list of all the software packages that has updated versions in therepository.<br>
+                             Be sure to <a href="software_sources.lua">update the repository sources</a> periodically to get the latest versions.<br><br>
+                             Click on the package names to manage individual software packages.</b>
+                         </center><br>
+-                        <a href="software_export_all.lua">Export list of available packages as CSV</a><br><br>
++                        <a href="software_export_all.lua">Export list of out of date packages as CSV</a><br><br>
+                         <table class="onetwo" border="1">
+                             <tr>
+                                 <th>Package name</th>
+-                                <th style="white-space:nowrap;" >Version</th>
+-                                <th>Description</th>
++                                <th style="white-space:nowrap;" >Old Version</th>
++                                <th style="white-space:nowrap;" >New Version</th>
+                             </tr>
+ ]]
+-    for num, package in pairs(pkgs) do
++    for num, package in ipairs(pkgs) do
+         content = content .. [[
+                             <tr>
+-                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[">]]..package.name..[[</a></td>
++                                <td><a href="software_pkg_info.lua?name=]]..package.name..[[&version=]]..package.version..[[&installed=installed&upgrade=upgrade">]]..package.name..[[</a></td>
+                                 <td style="white-space:nowrap;">]]..package.version..[[</td>
+-                                <td>]]..package.desc..[[</td>
++                                <td>]]..package.newversion..[[</td>
+                             </tr>
+ ]]                            
+     end
+     content = content .. [[
+                         </table><br>
+-                        <a href="software_export_all.lua">Export list of available packages as CSV</a>
++                        <a href="software_export_all.lua">Export list of out of date packages as CSV</a>
+ 
+                     </div>
+ ]]
+@@ -72,9 +83,9 @@ else
+     content = content .. [[
+                 <div id="info">
+                     <center>
+-                        <h2><img src="images/warning.png"/> No available packages</h2>
+-                        Either the package manager (opkg-cl) is not responding,<br>
+-                        or there are no packages in the repository.
++                        <h2><img src="images/ok.png"/> All packages seems to be up to date</h2>
++                        Be sure to <a href="software_sources.lua">update the repository sources</a> periodically to get the latest versions.<br>
++                        Also see the <a href="software_installed.lua"> list of installed packges</a> for further information
+                     </center>
+                 </div>
+ ]]
+diff --git a/webconfig/guinnux_web_base/srv/http/widgetsxml/2_software.xml b/webconfig/guinnux_web_base/srv/http/widgetsxml/2_software.xml
+index 1a31804..1cf43ec 100644
+--- a/webconfig/guinnux_web_base/srv/http/widgetsxml/2_software.xml
++++ b/webconfig/guinnux_web_base/srv/http/widgetsxml/2_software.xml
+@@ -2,7 +2,7 @@
+ 
+  <widget>
+    	<title>Software</title>		   
+-   	<href>software_all.lua</href>
++   	<href>software_status.lua</href>
+         <img>images/software.png</img>
+ 	<desc>View the Guinnux software repository and install or remove packages.</desc>
+  </widget> 
