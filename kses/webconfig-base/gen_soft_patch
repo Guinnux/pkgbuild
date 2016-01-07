@@ -1,0 +1,2 @@
+#!/bin/sh
+git diff webconfig/guinnux_web_base/srv/http/software_*.lua webconfig/guinnux_web_base/srv/http/config/software_conf.lua webconfig/guinnux_web_base/srv/http/widgetsxml/2_software.xml webconfig/guinnux_web_base/srv/http/modsxml/software.xml > ../../gnx5-software.patch
