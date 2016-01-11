@@ -1,0 +1,43 @@
+pkgname=gnxio
+pkgver=2.0.2
+pkgrel=1
+pkgdesc="Guinnux IO Manipulation Helper"
+arch=('i686' 'x86_64')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base')
+source=('gnxio::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git')
+        
+md5sums=('SKIP') 
+
+options=('strip' '!staticlibs')
+
+
+pkgver()
+{
+  
+  cd $srcdir/$pkgname/$pkgname
+
+  autoreconf -fi > /dev/null
+  
+  readarray -t lines <<<"$(./configure --version)"
+  versionarray=(${lines[0]// / })
+  echo ${versionarray[2]}
+  
+}
+
+build()
+{
+  cd $srcdir/$pkgname/$pkgname
+  ./configure --host=$CHOST \
+              --prefix=/usr \
+             
+  make              
+}
+
+package()
+{
+  cd $srcdir/$pkgname/$pkgname
+  make DESTDIR=$pkgdir install
+  
+}
