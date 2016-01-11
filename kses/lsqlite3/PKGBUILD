@@ -1,0 +1,29 @@
+pkgname=lsqlite3
+pkgver=0.9.3
+pkgrel=1
+pkgdesc="LUA Bindings for sqlite3"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://lua.sqlite.org/"
+depends=('lua' 'sqlite3')
+source=(${pkgname}-${pkgver}.tar.gz
+        'Makefile.gnx' )
+      
+
+md5sums=('ec3ec1b8a5ef1bf36c74fee60b9d44bd'
+         'fc33929ecc931fadd46400504c6f2609')
+
+
+options=('strip' '!staticlibs')
+
+build()
+{
+	cd ${srcdir}/${pkgname}-${pkgver}
+    make CC=$CHOST-gcc  PKGCONFIG=$CHOST-pkg-config -f ../Makefile.gnx
+}
+
+package()
+{
+	cd ${srcdir}/${pkgname}-${pkgver}
+    make CC=$CHOST-gcc  PKGCONFIG=$CHOST-pkg-config DESTDIR=${pkgdir} -f ../Makefile.gnx install
+}

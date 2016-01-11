@@ -1,0 +1,25 @@
+
+PKGCONFIG:=pkg-config
+
+LUAINC= $(shell $(PKGCONFIG) --cflags lua)
+LUALIB= $(shell $(PKGCONFIG) --libs lua)
+SQLITE3INC= $(shell $(PKGCONFIG) --cflags sqlite3)
+SQLITE3LIB= $(shell $(PKGCONFIG) --libs sqlite3)
+LUAMODS_DIR=$(shell $(PKGCONFIG) --variable=INSTALL_CMOD lua)
+
+all: lib
+
+lib: lsqlite3.so
+	
+lsqlite3.o: lsqlite3.c
+	$(CC) -O2 -fPIC -I/usr/include -c $< -o $@ -DLSQLITE_VERSION="\"0.9.3\"" -I/usr/include
+	
+
+lsqlite3.so: lsqlite3.o
+	$(CC) -shared -fpic  -o $@ $<  -lsqlite3 -llua
+
+install: lib
+	install -Dm755 lsqlite3.so $(DESTDIR)/$(LUAMODS_DIR)/lsqlite3.so
+		
+
+
