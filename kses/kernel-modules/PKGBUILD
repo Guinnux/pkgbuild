@@ -1,6 +1,6 @@
 pkgname=kernel-modules
 pkgver=3.10.16
-pkgrel=16
+pkgrel=17
 pkgdesc="Linux Kernel Modules"
 arch=('arm')
 license=('GPL')
@@ -10,7 +10,7 @@ depends=('kmod')
 options=('!strip')
 install=kernel-modules.install
 
-source=('linux.tar.bz2::http://gitlab.kses.net/guinnux/linux/repository/archive.tar.bz2?ref=gnx-current')
+source=('git+http://gitlab.kses.net/guinnux/linux.git#branch=gnx-current')
 
 md5sums=('SKIP')
 

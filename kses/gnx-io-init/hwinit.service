@@ -1,0 +1,14 @@
+[Unit]
+Description=Hardware Initialisation
+Before=basic.target
+BindsTo=dev-gnxio0
+After=dev-gnxio0 sysinit.target
+DefaultDependencies=false
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/hwinit
+
+[Install]
+WantedBy=multi-user.target

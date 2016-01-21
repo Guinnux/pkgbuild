@@ -1,5 +1,5 @@
 pkgname=gnxio
-pkgver=2.0.2
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Guinnux IO Manipulation Helper"
 arch=('i686' 'x86_64')
