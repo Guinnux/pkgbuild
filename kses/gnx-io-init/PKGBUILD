@@ -1,0 +1,25 @@
+pkgname=gnx-io-init
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Guinnux IO Initialisation Service"
+arch=('any')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base')
+depends=('gnxid' 'gnxio' 'lua')
+source=('git+http://gitlab.kses.net/guinnux-apps/gnx-io-init.git'
+        'hwinit.service')
+        
+md5sums=('SKIP'
+         'c93b804320427e51bcf891ca0fcd57c5')
+
+package()
+{
+  cd $srcdir/$pkgname
+  install -d -m0644 $pkgdir/etc/hwinit
+  install -d -m0644 $pkgdir/usr/share/kses/hwinit
+  install -Dm0755 ./hwinit  $pkgdir/usr/bin/hwinit
+  install -Dm0755 ./hwctl  $pkgdir/usr/bin/hwctl
+  install -Dm0644 $srcdir/hwinit.service $pkgdir/usr/lib/systemd/system/hwinit.service
+  cp ./hwscripts/* $pkgdir/usr/share/kses/hwinit/
+}
