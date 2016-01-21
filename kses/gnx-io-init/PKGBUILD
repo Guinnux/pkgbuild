@@ -7,6 +7,7 @@ license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
 depends=('gnxid' 'gnxio' 'lua')
+install=hwinit.install
 source=('git+http://gitlab.kses.net/guinnux-apps/gnx-io-init.git'
         'hwinit.service')
         
