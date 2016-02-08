@@ -1,0 +1,40 @@
+# arg 1:  the new package version
+# arg 2:  the old package version
+
+KERNEL_NAME=guinnux
+KERNEL_VERSION=4.4.1gnx-arm7
+
+check_links()
+{
+  cat <<EOF > /tmp/linux-links.sh
+  ln -svf /boot/zImage-${KERNEL_VERSION} /boot/zImage
+  if [ -e /boot/board.dtb ] ; then
+     echo "board.dtb currently linked to $(realpath board.dtb)"
+  else
+     if GNX_DTBNAME ; then
+        ln -svf /boot/$GNX_DTBNAME /board.dtb 
+     else
+        echo "Please check that board.dtb is linked to the proper DTB file"
+     fi
+  fi      
+  EOF
+  gnxid -s /tmp/linux-links.sh
+}
+
+
+
+post_install () {
+  # updating module dependencies
+  echo ">>> Updating module dependencies. Please wait ..."
+  depmod ${KERNEL_VERSION}
+  echo ">>> Checking kernel boot links Please wait ..."
+  check_links 
+}
+
+post_upgrade() {
+  # updating module dependencies
+  echo ">>> Updating module dependencies. Please wait ..."
+  depmod ${KERNEL_VERSION}
+  echo ">>> Checking kernel boot links Please wait ..."
+  check_links
+}
