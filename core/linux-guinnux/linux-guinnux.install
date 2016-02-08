@@ -9,15 +9,17 @@ check_links()
   cat <<EOF > /tmp/linux-links.sh
   ln -svf /boot/zImage-${KERNEL_VERSION} /boot/zImage
   if [ -e /boot/board.dtb ] ; then
-     echo "board.dtb currently linked to $(realpath board.dtb)"
+     echo "board.dtb currently linked to $(realpath /boot/board.dtb)"
   else
-     if GNX_DTBNAME ; then
-        ln -svf /boot/$GNX_DTBNAME /board.dtb 
+     if [ -v GNX_DTBNAME ] ; then
+        ln -svf /boot/\${GNX_DTBNAME} /boot/board.dtb 
      else
-        echo "Please check that board.dtb is linked to the proper DTB file"
+        echo "Please check that /boot/board.dtb is linked to the proper DTB file"
      fi
-  fi      
-  EOF
+  fi
+     
+EOF
+
   gnxid -s /tmp/linux-links.sh
 }
 
@@ -37,4 +39,5 @@ post_upgrade() {
   depmod ${KERNEL_VERSION}
   echo ">>> Checking kernel boot links Please wait ..."
   check_links
+  
 }
