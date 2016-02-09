@@ -42,8 +42,8 @@ md5sums=('SKIP')
 package() {
   cd "${srcdir}/${pkgname}"
 
-  make DESTDIR="${pkgdir}" FIRMWAREDIR=/lib/firmware install
-  rm "${pkgdir}/lib/firmware/"{Makefile,configure}
+  make DESTDIR="${pkgdir}" FIRMWAREDIR=/usr/lib/firmware install
+  rm "${pkgdir}/usr//lib/firmware/"{Makefile,configure}
 
 	install -d "${pkgdir}/usr/share/licenses/linux-guinnux-firmware/"
   install -Dm644 LICEN* "${pkgdir}/usr/share/licenses/linux-guinnux-firmware/"
