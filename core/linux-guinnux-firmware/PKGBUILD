@@ -1,0 +1,52 @@
+# $Id$
+# Maintainer: Ben Phillips <ben@kses.net>
+
+pkgname=linux-guinnux-firmware
+pkgver=20160209
+pkgrel=1
+pkgdesc="Firmware files for Guinnux"
+makedepends=('git')
+arch=('any')
+license=('custom')
+conflicts=('linux-firmware-git'
+           'linux-firmware'
+           'kernel26-firmware'
+           'ar9170-fw'
+           'iwlwifi-1000-ucode'
+           'iwlwifi-3945-ucode'
+           'iwlwifi-4965-ucode'
+           'iwlwifi-5000-ucode'
+           'iwlwifi-5150-ucode'
+           'iwlwifi-6000-ucode'
+           'rt2870usb-fw'
+           'rt2x00-rt61-fw'
+           'rt2x00-rt71w-fw'
+           'amd-ucode')
+replaces=('kernel26-firmware'
+          'linux-firmware-git'                                                                                                                                                                                           'linux-firmware'
+          'ar9170-fw'
+          'iwlwifi-1000-ucode'
+          'iwlwifi-3945-ucode'
+          'iwlwifi-4965-ucode'
+          'iwlwifi-5000-ucode'
+          'iwlwifi-5150-ucode'
+          'iwlwifi-6000-ucode'
+          'rt2870usb-fw'
+          'rt2x00-rt61-fw'
+          'rt2x00-rt71w-fw'
+          'amd-ucode')
+options=(!strip)
+source=("linux-guinnux-firmware::git+http://gitlab.kses.net/guinnux/guinnux-firmware.git")
+md5sums=('SKIP')
+
+package() {
+  cd "${srcdir}/${pkgname}"
+
+  make DESTDIR="${pkgdir}" FIRMWAREDIR=/lib/firmware install
+  rm "${pkgdir}/lib/firmware/"{Makefile,configure}
+
+	install -d "${pkgdir}/usr/share/licenses/linux-guinnux-firmware/"
+  install -Dm644 LICEN* "${pkgdir}/usr/share/licenses/linux-guinnux-firmware/"
+}
+
+

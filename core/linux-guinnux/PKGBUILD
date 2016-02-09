@@ -77,7 +77,7 @@ _package() {
   pkgdesc="The Linux Kernel and modules - ${_desc}"
   depends=('coreutils' 'module-init-tools>=3.16')
 optdepends=('crda: to set the correct wireless channels of your country' 
-            'linux-firmware: Provides firmware blobs for stuf that needs firmware blobs' )
+            'linux-guinnux-firmware: Provides firmware blobs for stuff that needs firmware blobs' )
   provides=('kernel26' "linux=${pkgver}")
   conflicts=('kernel26' 'linux')
   install=${pkgname}.install
