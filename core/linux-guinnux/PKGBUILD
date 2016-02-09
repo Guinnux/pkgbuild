@@ -18,7 +18,7 @@ license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'git')
 options=('!strip')
 source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
-         "git+http://gitlab.kses.net/guinnux/kernel-patches.git"
+         "git+http://gitlab.kses.net/guinnux/kernel-patches.git#branch=wifi-smartconnect-feature"
         'guinnux.config')
 
 md5sums=('d27b1458acde6369cf9eaf956f402901'
@@ -33,6 +33,7 @@ prepare() {
    patch -p0 -i "${srcdir}/kernel-patches/dts-Makefile.patch"
    patch -p0 -i "${srcdir}/kernel-patches/phy-build.patch"
    patch -p0 -i "${srcdir}/kernel-patches/gnxio-build.patch"
+   patch -p0 -i "${srcdir}/kernel-patches/atmel-smartconnect.patch"
 
   cp -dvR ${srcdir}/kernel-patches/*/ .
  
