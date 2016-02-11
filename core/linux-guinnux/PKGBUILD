@@ -10,7 +10,7 @@ _srcname=linux-${_commit}
 _kernelname=${pkgbase#linux-}
 _desc="Guinnux"
 pkgver=4.4.1
-pkgrel=1
+pkgrel=2
 _srcname=linux-${pkgver}
 arch=('arm')
 url="http://www.kernel.org/"
@@ -18,14 +18,20 @@ license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'git')
 options=('!strip')
 source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
-         "git+http://gitlab.kses.net/guinnux/kernel-patches.git#branch=wifi-smartconnect-feature"
+        "git+http://gitlab.kses.net/guinnux/kernel-patches.git#branch=wifi-smartconnect-feature"
+	"git+http://gitlab.kses.net/guinnux/initramfs.git"
         'guinnux.config')
 
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
+	 'SKIP'
          'SKIP')
         
 prepare() {
+  
+  msg2 "Extracting initramfs"
+  cd "${srcdir}/initramfs"
+  tar -xf ./initramfs.tar.gz  
   cd "${srcdir}/${_srcname}"
 
 
@@ -39,7 +45,7 @@ prepare() {
  
   msg "Prepare to build"
   cat "${srcdir}/guinnux.config" > ./.config
-
+  sed -e  "s|CONFIG_INITRAMFS_SOURCE=.*|CONFIG_INITRAMFS_SOURCE=\"${srcdir}/initramfs/initramfs\"|g" -i ./.config
   # don't run depmod on 'make install'. We'll do this ourselves in packaging
   sed -i '2iexit 0' scripts/depmod.sh
 }
@@ -62,8 +68,8 @@ build() {
   ####################
   # stop here
   # this is useful to configure the kernel
-#msg "Stopping build"
-# return 1
+  #msg "Stopping build"
+  # return 1
   ####################
 
   #yes "" | make config
