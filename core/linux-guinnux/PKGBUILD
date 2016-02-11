@@ -58,7 +58,7 @@ build() {
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
-  make  ARCH=arm CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
+  #make  ARCH=arm CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
