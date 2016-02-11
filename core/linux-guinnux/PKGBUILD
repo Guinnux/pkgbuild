@@ -24,7 +24,7 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
-	 'SKIP'
+         'SKIP'
          'SKIP')
         
 prepare() {
@@ -59,7 +59,7 @@ build() {
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
-  # make  ARCH=arm CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
+  #make  ARCH=arm CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
@@ -75,7 +75,7 @@ build() {
   #yes "" | make config
 
   msg "Building!"
-  make ARCH=arm CROSS_COMPILE=${CHOST}- zImage modules dtbs
+make ARCH=arm CROSS_COMPILE=${CHOST}- zImage modules dtbs
 
 }
 

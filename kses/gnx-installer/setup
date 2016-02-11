@@ -17,15 +17,6 @@ if [ "`id -u`" != "0" ]; then
         exit 1
 fi
 
-# establish default package list exists
-PKG_LIST=""
-if [ -e "/usr/share/setup/pkglist" ]; then
-	PKG_LIST="/usr/share/setup/pkglist"
-else
-        echo -e "${txtbld}${txtred}The package list(/usr/share/setup/pkglist) could not be found, please reinstall gnx-installer.${txtreset}\n" 1>&2
-        echo -e "Aborting...\n" 
-        exit 1
-fi
 
 if [ -z "$FS_TYPE" ]; then
 	FS_TYPE="ext4"
@@ -180,38 +171,9 @@ else
     fi
 fi
 
-#PACMAN_CMD="exit"
-PACMAN_CMD="pacman --cachedir $GNX_PATH/var/cache/pacman/pkg -r $GNX_PATH"
-PACKAGES=$(cat $PKG_LIST)
-mkdir -p $GNX_PATH/var/lib/pacman
+echo "${txtbld}${txtblue}Updating the Guinnux Installer${txtreset}"
+pacman -Sy -dd --force --noconfirm gnx-installer
 
-
-echo "${txtbld}${txtblue}Downloading Packages...${txtreset}"
-$PACMAN_CMD -Sy --noconfirm
-$PACMAN_CMD -Sw --noconfirm $PACKAGES
-
-echo "${txtbld}${txtblue}Installing Packages...${txtreset}"
-$PACMAN_CMD -S --noconfirm $PACKAGES
-
-echo "${txtbld}${txtblue}Cleaning Package Cache...${txtreset}"
-$PACMAN_CMD -Scc --noconfirm
-
-cp $GNX_PATH/etc/iptables/empty.rules $GNX_PATH/etc/iptables/iptables.rules
-
-echo "${txtbld}${txtblue}Creating users...${txtreset}"
-chroot $GNX_PATH useradd -m -U -p '$6$7JRddgQn$l9p/FtbvGjJl9fBi6C6yVsyA83D36jv3ORdTl7p4FgdW81VM7qAjtIS5JyP0g5M5oB7qor.mxc1s0qNxkIwNa1' default
-
-echo "${txtbld}${txtblue}Setting Timezone...${txtreset}"
-chroot $GNX_PATH ln -sf /usr/share/zoneinfo/Africa/Johannesburg /etc/localtime
-
-echo "${txtbld}${txtblue}Setting up default services...${txtreset}"
-chroot $GNX_PATH systemctl enable sshd
-chroot $GNX_PATH systemctl enable iptables
-chroot $GNX_PATH systemctl enable runit
-chroot $GNX_PATH systemctl enable lighttpd
-chroot $GNX_PATH systemctl enable dhcpd4
-chroot $GNX_PATH systemctl enable ntpdate
-chroot $GNX_PATH systemctl enable ntpd
-chroot $GNX_PATH systemctl enable blackwall
-
+export GNX_PATH
+exec /usr/bin/gnx-install 
 
