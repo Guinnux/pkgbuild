@@ -10,6 +10,7 @@ url="http://sourceforge.net/projects/watchdog"
 license=('GPL')
 depends=('glibc')
 backup=(etc/watchdog.conf)
+groups=('base')
 source=(http://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver}.tar.gz
         watchdog.systemd
         watchdog.logrotate)
@@ -21,8 +22,9 @@ build() {
   cd "${srcdir}"/${pkgname}-${pkgver}
 
   ./configure \
+    --host=$CHOST \
 	--prefix=/usr \
-        --sbindir=/usr/bin \
+    --sbindir=/usr/bin \
 	--mandir=/usr/share/man \
 	--sysconfdir=/etc \
 	--localstatedir=/var \
@@ -37,4 +39,5 @@ package() {
   make install DESTDIR="${pkgdir}"
   install -D -m644 "${srcdir}"/watchdog.systemd "${pkgdir}"/usr/lib/systemd/system/watchdog.service
   install -D -m644 "${srcdir}"/watchdog.logrotate "${pkgdir}"/etc/logrotate.d/watchdog
+  sed -e 's|.*watchdog-device.*|watchdog-device = /dev/watchdog|' -i  ${pkgdir}/etc/watchdog.conf
 }
