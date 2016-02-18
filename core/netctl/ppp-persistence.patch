@@ -1,0 +1,52 @@
+--- src/netctl.in	2015-06-17 10:24:54.000000000 +0200
++++ src/netctl.in.new	2016-02-18 10:28:21.553800718 +0200
+@@ -43,9 +43,14 @@
+ # Wrapper around systemctl to convert profile names to unit names
+ sd_call() {
+     local command=$1
++    load_profile "$2"
+     shift
+     set -- $(sd_escape "$@")
+-    systemctl $command $(printf 'netctl@%s.service\n' "$@")
++    if $(is_yes ${PPPPersist:-no}) ; then
++      systemctl $command $(printf 'netctl-ppp@%s.service\n' "$@")	
++    else 
++      systemctl $command $(printf 'netctl@%s.service\n' "$@")
++    fi
+ }
+ 
+ list() {
+@@ -105,13 +110,20 @@
+ 
+ unit_enable() {
+     local unit="@systemdsystemconfdir@/netctl@$(sd_escape "$1").service"
++    load_profile "$1"
++    if $(is_yes ${PPPPersist:-no}) ; then
++    	unit="@systemdsystemconfdir@/netctl-ppp@$(sd_escape "$1").service" 
++    fi
+     if [[ -e $unit ]]; then
+         report_error "A unit file for profile '$1' already exists"
+         return 1
+     fi
+-    load_profile "$1"
+     do_readable touch "$unit"
+-    echo ".include @systemdsystemunitdir@/netctl@.service" > "$unit"
++    if $(is_yes ${PPPPersist:-no}) ; then
++    	echo ".include @systemdsystemunitdir@/netctl-ppp@.service" > "$unit"
++    else	
++        echo ".include @systemdsystemunitdir@/netctl@.service" > "$unit"
++    fi    
+     echo -e "\n[Unit]" >> "$unit"
+     [[ -n $Description ]] && echo "Description=$Description" >> "$unit"
+     declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=$Interface
+@@ -133,6 +145,10 @@
+ 
+ unit_disable() {
+     local unit="@systemdsystemconfdir@/netctl@$(sd_escape "$1").service"
++    load_profile "$1"
++    if $(is_yes ${PPPPersist:-no}) ; then
++    	unit="@systemdsystemconfdir@/netctl-ppp@$(sd_escape "$1").service" 
++    fi
+     if sd_call "is-enabled --quiet" "$1" &> /dev/null; then
+         sd_call disable "$1"
+     fi
