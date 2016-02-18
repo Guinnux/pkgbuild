@@ -37,6 +37,8 @@ cp $GNX_PATH/etc/iptables/empty.rules $GNX_PATH/etc/iptables/iptables.rules
 
 echo "${txtbld}${txtblue}Creating users...${txtreset}"
 chroot $GNX_PATH useradd -m -U -p '$6$7JRddgQn$l9p/FtbvGjJl9fBi6C6yVsyA83D36jv3ORdTl7p4FgdW81VM7qAjtIS5JyP0g5M5oB7qor.mxc1s0qNxkIwNa1' default
+cp $GNX_PATH/etc/skel/.bash_profile $GNX_PATH/root
+cp /usr/share/setup/root.bashrc $GNX_PATH/root/.bashrc
 
 echo "${txtbld}${txtblue}Setting Timezone...${txtreset}"
 chroot $GNX_PATH ln -sf /usr/share/zoneinfo/Africa/Johannesburg /etc/localtime
