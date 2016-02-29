@@ -10,7 +10,7 @@ _srcname=linux-${_commit}
 _kernelname=${pkgbase#linux-}
 _desc="Guinnux"
 pkgver=4.4.1
-pkgrel=2
+pkgrel=3
 _srcname=linux-${pkgver}
 arch=('arm')
 url="http://www.kernel.org/"
@@ -25,8 +25,8 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         'SKIP')
-        
+         '960e4f9a1f0a93b7b90d5a814f4b2b1a')
+                
 prepare() {
   
   msg2 "Extracting initramfs"
@@ -39,6 +39,9 @@ prepare() {
    patch -p0 -i "${srcdir}/kernel-patches/dts-Makefile.patch"
    patch -p0 -i "${srcdir}/kernel-patches/phy-build.patch"
    patch -p0 -i "${srcdir}/kernel-patches/gnxio-build.patch"
+   patch -p0 -i "${srcdir}/kernel-patches/gem-usrio.patch"
+   patch -p0 -i "${srcdir}/kernel-patches/dp83848_led.patch"
+
 
   cp -dvR ${srcdir}/kernel-patches/*/ .
  
@@ -81,7 +84,7 @@ make ARCH=arm CROSS_COMPILE=${CHOST}- zImage modules dtbs
 _package() {
   pkgdesc="The Linux Kernel and modules - ${_desc}"
   depends=('coreutils' 'module-init-tools>=3.16')
-optdepends=('crda: to set the correct wireless channels of your country' 
+  optdepends=('crda: to set the correct wireless channels of your country' 
             'linux-firmware: Provides firmware blobs for stuf that needs firmware blobs' )
   provides=('kernel26' "linux=${pkgver}")
   conflicts=('kernel26' 'linux')
