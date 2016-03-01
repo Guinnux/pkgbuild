@@ -7,7 +7,7 @@
 
 pkgname=runit
 pkgver=2.1.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Guinnux systemd compatible runit package'
 url='http://smarden.org/runit/'
 groups=('base')
@@ -38,7 +38,6 @@ prepare(){
 	local pd=runit-${pkgver}
 	sed -i -e's,sbin/runit,usr/bin/runit,g' ${pd}/src/runit.h
 	sed -i -e's/ -static//g' ${pd}/src/Makefile
-	sed -i -e's:^char \*varservice ="/service/";$:char \*varservice ="/var/service/";:' ${pd}/src/sv.c
 	patch -d ${pd} -Np1 <${srcdir}/cross.patch
 	patch -d ${pd} -Np1 <${srcdir}/utmpset-time_t.patch
 	}
