@@ -4,6 +4,8 @@ Interface=eth1
 BindsToInterfaces=eth1
 #VLANID=4
 
+SkipNoCarrier=yes
+
 Connection=ethernet
 IP=static
 Address=('192.168.2.1/24')
