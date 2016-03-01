@@ -1,0 +1,40 @@
+pkgname=libkutils
+pkgver=1.5
+pkgrel=1
+pkgdesc="KSES Swiss Army Knife"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://www.guinnux.org"
+source=('libkutils::git+http://bugz.kses.net/gitrepo/KLib/kutils.git')
+md5sums=('SKIP')
+
+options=('strip' '!staticlibs')
+
+
+pkgver()
+{
+
+  cd $srcdir/$pkgname
+
+  autoreconf -fi > /dev/null
+  
+  readarray -t lines <<<"$(./configure --version)"
+  versionarray=(${lines[0]// / })
+  echo ${versionarray[2]}
+}
+
+build()
+{
+  cd $srcdir/$pkgname
+  ./configure --host=$CHOST \
+              --prefix=/usr 
+              
+  make              
+}
+
+package()
+{
+  cd $srcdir/$pkgname
+  make DESTDIR=$pkgdir install
+  rm $pkgdir/usr/lib/*.la
+}
