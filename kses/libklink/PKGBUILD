@@ -1,5 +1,5 @@
 pkgname=libklink
-pkgver=1.2.3
+pkgver=1.2.1
 pkgrel=1
 pkgdesc="KSES Multidrop Bus Link Layer"
 arch=('i686' 'x86_64')

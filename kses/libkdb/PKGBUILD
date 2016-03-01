@@ -1,12 +1,12 @@
 pkgname=libkdb
-pkgver=1.1
+pkgver=1.2.3
 pkgrel=1
 pkgdesc="KSES bject Persistence Interface library"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
 depends=('sqlite3')
-source=('libkdb::git+http://bugz.kses.net/gitrepo/KLib/libkdb.git')
+source=('libkdb::git+http://bugz.kses.net/gitrepo/KLib/kdb.git')
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
