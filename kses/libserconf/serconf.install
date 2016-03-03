@@ -1,0 +1,61 @@
+
+post_install()
+{
+cat << SERCONF > /tmp/serconf.install
+XMLOUT=/etc/rsm/serialconf.xml
+
+if [ -e \$XMLOUT ]; then
+   echo "Do not destroy the existing config"
+   exit 0
+fi
+
+if [ ! -d  /etc/rsm/ ]; then
+   mkdir -p /etc/rsm
+fi
+
+
+function gen_port
+{
+cfg=(\${1//:/ })
+
+echo "      <port device=\"\${cfg[0]}\">" >> \$XMLOUT
+echo "           <owner>\${cfg[1]}</owner>" >> \$XMLOUT
+echo "           <editable>\${cfg[2]}</editable>" >> \$XMLOUT
+echo "           <baud>\${cfg[3]}</baud>" >> \$XMLOUT
+echo "           <data>\${cfg[4]}</data>" >> \$XMLOUT
+echo "           <stop>\${cfg[5]}</stop>" >> \$XMLOUT
+echo "           <mode>\${cfg[6]}</mode>" >> \$XMLOUT
+echo "      </port>" >> \$XMLOUT
+}
+
+
+cat << EOF > \$XMLOUT
+<config>
+    <serialconfig>
+EOF
+
+
+SERIALPORTS=(\$(env | grep GNX_SERIAL))
+regex="GNX_SERIAL.+=(.+)"
+
+for port in \${SERIALPORTS[*]}; do
+[[ \$port =~ \$regex ]]
+   portcfg="\${BASH_REMATCH[1]}"
+gen_port \$portcfg
+done
+
+cat << EOF >> \$XMLOUT
+    </serialconfig>
+</config>
+EOF
+
+
+SERCONF
+gnxid -s /tmp/serconf.install
+	
+}
+
+post_upgrade()
+{
+	post_install
+}

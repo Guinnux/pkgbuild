@@ -1,11 +1,12 @@
 pkgname=libserconf
 pkgver=1.3.1
-pkgrel=1
+pkgrel=2
 pkgdesc="KSES Serial Configuration Library"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
-depends=('libklog' 'libxml2')
+depends=('libklog' 'libxml2' 'gnxid')
+install=serconf.install
 source=('libserconf::git+http://bugz.kses.net/gitrepo/KLib/serconf.git')
 md5sums=('SKIP')
 
