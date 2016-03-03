@@ -1,0 +1,39 @@
+pkgname=libgxdlms
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="he Gurux DLMS C++ Library"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://www.guinnux.org"
+source=('libgxdlms::git+http://gitlab.kses.net/rsm/libgxdlms.git')
+md5sums=('SKIP')
+
+options=('strip' '!staticlibs')
+
+
+pkgver()
+{
+
+  cd $srcdir/$pkgname
+
+  autoreconf -fi > /dev/null
+  
+  readarray -t lines <<<"$(./configure --version)"
+  versionarray=(${lines[0]// / })
+  echo ${versionarray[2]}
+}
+
+build()
+{
+  cd $srcdir/$pkgname
+  ./configure --host=$CHOST \
+              --prefix=/usr 
+              
+  make              
+}
+
+package()
+{
+  cd $srcdir/$pkgname
+  make DESTDIR=$pkgdir install
+}
