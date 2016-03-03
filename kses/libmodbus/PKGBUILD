@@ -1,0 +1,28 @@
+pkgname=libmodbus
+pkgver=3.0.6
+pkgrel=1
+pkgdesc="libmodbus is a free software library to send/receive data according to the Modbus protocol"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://libmodbus.org"
+source=(http://libmodbus.org/releases/$pkgname-$pkgver.tar.gz)
+
+md5sums=('c80f88b6ca19cabc4ceffc195ca07771')
+
+options=('strip' '!staticlibs')
+
+
+build()
+{
+cd $srcdir/$pkgname-$pkgver
+  ./configure --host=$CHOST \
+              --prefix=/usr --without-documentation
+              
+  make              
+}
+
+package()
+{
+cd $srcdir/$pkgname-$pkgver
+  make DESTDIR=$pkgdir install
+}
