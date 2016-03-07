@@ -54,6 +54,7 @@ chroot $GNX_PATH systemctl enable ntpd
 chroot $GNX_PATH systemctl enable blackwall
 chroot $GNX_PATH systemctl enable hwinit
 chroot $GNX_PATH systemctl enable watchdog
+chroot $GNX_PATH systemctl enable cronie
 
 echo "${txtbld}${txtblue}That's all folks${txtreset}"
 

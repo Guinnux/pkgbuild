@@ -1,6 +1,6 @@
 pkgname=gnx-installer
 pkgver=3.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Guinnux Installer Scripts"
 arch=('any')
 license=('LGPL')
@@ -13,12 +13,12 @@ source=('setup'
         'root.bashrc'
         'pkglist')
 
-md5sums=('39c95ff18bca0c6afaa740bd321d6e39'
+ md5sums=('39c95ff18bca0c6afaa740bd321d6e39'
          'ee2e49b1a76473242f3a8b3cdbb38751'
-         '1dab5c20156a80bc6fb11ebfc1755c7f'
+         'cdd044cbae7b3f7cc3998507dd112a23'
          'eec3bb758a9c06cf1265077f7cef8c25'
          'cbb2a5413775ad0b7d9116c79edbcbfe')
-                                                                                                                 
+                                                                                                                        
                                                          
 package()
 {
