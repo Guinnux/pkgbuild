@@ -9,6 +9,7 @@ DefaultDependencies=false
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/hwinit
+TimeoutSec=90
 
 [Install]
 WantedBy=multi-user.target

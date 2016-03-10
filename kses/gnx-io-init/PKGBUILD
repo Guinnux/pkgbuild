@@ -1,6 +1,6 @@
 pkgname=gnx-io-init
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Guinnux IO Initialisation Service"
 arch=('any')
 license=('GPL')
@@ -12,7 +12,8 @@ source=('git+http://gitlab.kses.net/guinnux-apps/gnx-io-init.git'
         'hwinit.service')
         
 md5sums=('SKIP'
-         'c93b804320427e51bcf891ca0fcd57c5')
+         '7060fd36d2314254fbe86e7b96f5f858')
+
 
 package()
 {
