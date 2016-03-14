@@ -1,6 +1,6 @@
 pkgname=gnx-io-init
-pkgver=1.0.0
-pkgrel=2
+pkgver=1.1.0
+pkgrel=1
 pkgdesc="Guinnux IO Initialisation Service"
 arch=('any')
 license=('GPL')
