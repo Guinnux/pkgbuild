@@ -1,0 +1,64 @@
+# $Id: PKGBUILD 227256 2014-12-02 20:17:34Z thomas $
+# Maintainer: Thomas Bächler <thomas@archlinux.org>
+
+pkgname=openvpn
+pkgver=2.3.6
+pkgrel=2
+pkgdesc="An easy-to-use, robust, and highly configurable VPN (Virtual Private Network)"
+arch=(i686 x86_64)
+url="http://openvpn.net/index.php/open-source.html"
+depends=('openssl' 'lzo' 'iproute2' 'libsystemd')
+makedepends=('systemd')
+license=('custom')
+install=openvpn.install
+source=(http://swupdate.openvpn.net/community/releases/openvpn-${pkgver}.tar.gz
+        openvpn@.service
+        openvpn.conf
+        ca.crt
+        client.crt
+        client.key)
+
+
+sha256sums=('7baed2ff39c12e1a1a289ec0b46fcc49ff094ca58b8d8d5f29b36ac649ee5b26'
+            '860976d954bd1db95861b95f0ef42e4e80618aa23a9f2aed26d17ee3d09110df'
+            '276914ce024cdbf3600d9203d11e3757c9d131a43b47b90521eb7177c6c39c29'
+            '8745608faca8e2a1e8285ab03277c9d8a62046b537cb77cffa296a22b2500348'
+            '7162f136cc27dc9fb021a385c4ca6cf5651dd889ead4d0ca796ea2983172de1a'
+            'dc63d6fe63011c68b09bb3d3636379d9731ad9fac77fcca1ea6918e373ebd08e')
+
+build() {
+  cd "${srcdir}"/$pkgname-$pkgver
+  CFLAGS="$CFLAGS -DPLUGIN_LIBDIR=\\\"/usr/lib/openvpn\\\"" ./configure \
+    --host=$CHOST \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --enable-password-save \
+    --mandir=/usr/share/man \
+    --enable-iproute2 \
+    --enable-systemd
+  make
+}
+
+package() {
+  cd "${srcdir}"/$pkgname-$pkgver
+  # Install openvpn
+  make DESTDIR="${pkgdir}" install
+  install -d -m755 "${pkgdir}"/etc/openvpn
+  install -D -m644 "${srcdir}"/openvpn.conf "${pkgdir}"/etc/openvpn/openvpn.conf
+  install -D -m644 "${srcdir}"/ca.crt "${pkgdir}"/etc/openvpn/ca.crt
+  install -D -m644 "${srcdir}"/ca.crt "${pkgdir}"/etc/openvpn/client.crt
+  install -D -m644 "${srcdir}"/ca.crt "${pkgdir}"/etc/openvpn/client.key
+  
+  
+  # Install examples
+  install -d -m755 "${pkgdir}"/usr/share/openvpn
+  cp -r sample/sample-config-files "${pkgdir}"/usr/share/openvpn/examples
+  # Install license
+  install -d -m755 "${pkgdir}"/usr/share/licenses/${pkgname}/
+  ln -sf /usr/share/doc/${pkgname}/{COPYING,COPYRIGHT.GPL} "${pkgdir}"/usr/share/licenses/${pkgname}/
+  # Install contrib
+  install -d -m755 "${pkgdir}"/usr/share/openvpn/contrib
+  cp -r contrib "${pkgdir}"/usr/share/openvpn
+  # Install systemd service
+  install -D -m644 "${srcdir}"/openvpn@.service "${pkgdir}"/usr/lib/systemd/system/openvpn@.service
+}
