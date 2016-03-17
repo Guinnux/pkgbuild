@@ -6,3 +6,26 @@ post_upgrade() {
     echo ">>>  # pacman -S easy-rsa"
   fi
 }
+
+post_install()
+{
+
+cat << EOF > /tmp/openvpn.sh
+
+LOGIN_FILE="/etc/openvpn/client-login"
+
+# Create client login
+if [ ! -z \${GNX_WAN_ID} ] ; then
+    echo "gnx_\${GNX_WAN_ID}" > \${LOGIN_FILE}
+    echo "g\\\$uinnux" >> \${LOGIN_FILE}
+else
+    echo "guinnux" > \${LOGIN_FILE}
+    echo "g\\\$uinnux" >> \${LOGIN_FILE}
+fi
+EOF
+
+gnxid -s /tmp/openvpn.sh
+chmod 0600 /etc/openvpn/client-login
+
+}
+
