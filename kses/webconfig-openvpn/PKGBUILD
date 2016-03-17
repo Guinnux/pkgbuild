@@ -1,0 +1,21 @@
+pkgname=webconfig-openvpn
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Guinnux webconfig for OpenVPN"
+arch=('any')
+license=('GPL')
+url="http://www.guinnux.org"
+groups=('base')
+depends=('lua' 'lighttpd' 'openvpn')
+source=(webconfig-openvpn::git+http://gitlab.kses.net/guinnux-apps/webconfig-openvpn.git#tag=v${pkgver})
+      
+md5sums=('SKIP')
+
+
+
+package()
+{
+cd $srcdir/$pkgname
+cp -dvR ./srv "$pkgdir"/
+  
+}
