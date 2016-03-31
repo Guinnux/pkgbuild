@@ -85,7 +85,8 @@ generate_gsm()
 	if [ -v GNX_GSM ]; then
 	    cfg=(\${GNX_GSM//:/ })
 		echo "GSM on \${cfg[0]}"
-		sed -i s%Interface=.*%Interface=\${cfg[0]}% /etc/netctl/gsm
+		cfg_if=\$(basename \${cfg[0]}) 
+		sed -i s%Interface=.*%Interface=\${cfg_if}% /etc/netctl/gsm
 		echo "#!/usr/bin/sh" > /etc/netctl/options/gsm.hwinit
 		echo "hwinit init \${cfg[1]}" >> /etc/netctl/options/gsm.hwinit
 	else
