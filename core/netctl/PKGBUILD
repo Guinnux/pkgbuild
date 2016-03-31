@@ -21,13 +21,18 @@ optdepends=('dialog: for the menu based wifi assistant'
            )
 source=(https://sources.archlinux.org/other/packages/netctl/netctl-${pkgver}.tar.xz
         'netctl-ppp@.service'
-        'ppp-persistence.patch')
+        'ppp-persistence.patch'
+        'ppp.hwinit')
+
+
 
 arch=('any')
 
 md5sums=('1465a0595af16fd88a5f1ecdcebc0f0c'
-         '2fb91e10de609ce3ceebb69d474dd766'
-         'c18b112fb17093f9b8bb7545f0e57963')
+         'a810081becfc0d65f88cd9728384d3b7'
+         'c18b112fb17093f9b8bb7545f0e57963'
+         '5fff524c7c51c5b83ba6bda8ce3c9fb4')
+
 
 prepare() {
 	cd "$srcdir/netctl-${pkgver}"
@@ -45,6 +50,6 @@ package() {
   
   cd "$srcdir"
   install -D -m644 "netctl-ppp@.service"  "$pkgdir/usr/lib/systemd/system/netctl-ppp@.service"
-
+  install -D -m755 "ppp.hwinit"  "$pkgdir/etc/netctl/options/ppp.hwinit"
 }
 
