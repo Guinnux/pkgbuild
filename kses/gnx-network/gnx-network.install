@@ -76,9 +76,30 @@ generate_lan()
 	
 }
 
+
+generate_gsm()
+{
+	echo "We are now generating GSM templates"
+	echo "GNX_GSM=\$GNX_GSM"
+	
+	if [ -v GNX_GSM ]; then
+	    cfg=(\${GNX_GSM//:/ })
+		echo "GSM on \${cfg[0]}"
+		sed -i s%Interface=.*%Interface=\${cfg[0]}% /etc/netctl/gsm
+		echo "#!/usr/bin/sh" > /etc/netctl/options/gsm.hwinit
+		echo "hwinit init \${cfg[1]}" >> /etc/netctl/options/gsm.hwinit
+	else
+	    rm 	/etc/netctl/gsm
+	fi
+	
+}
+
+
+
 generate_wan
 generate_lan
 generate_usb
+generate_gsm
 
 EOF
 

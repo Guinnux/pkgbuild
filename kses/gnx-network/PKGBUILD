@@ -1,31 +1,38 @@
 pkgname=gnx-network
-pkgver=3.0
-pkgrel=3
+pkgver=3.1
+pkgrel=1
 pkgdesc="Guinnux Networking Configuration Scripts"
 arch=('any')
 license=('LGPL')
 url="http://www.guinnux.org"
 groups=('base')
-depends=('netctl' 'gnxid' 'sed')
+depends=('netctl' 'gnxid' 'sed' 'gnx-io-init')
 backup=('etc/netctl/lan'
         'etc/netctl/wan'
-        'etc/netctl/usb')
+        'etc/netctl/usb'
+        'etc/netctl/gsm'
+        'etc/netctl/options/gsm.options')
  
 
 install=gnx-network.install
 
 source=('wan.template'
         'lan.template'
-        'usb.template')
+        'usb.template'
+        'gsm.template'
+        'gsm.options')
         
 md5sums=('5b7ba879fdd04e241163b332fa3f33b0'
          '43b72ff6ed77a2f4dff2283e8b4f1172'
-         '83886035713ee098b2568ca75453a220')
-
+         '83886035713ee098b2568ca75453a220'
+         'db004c08fd496749e8e16d2edbc9ac34'
+         'c811024ba0159868d599466a30d2d82f')
 
 package()
 {
   install -D -m644 $srcdir/wan.template $pkgdir/etc/netctl/wan
   install -D -m644 $srcdir/lan.template $pkgdir/etc/netctl/lan
   install -D -m644 $srcdir/usb.template $pkgdir/etc/netctl/usb
+  install -D -m644 $srcdir/gsm.template $pkgdir/etc/netctl/gsm
+  install -D -m644 $srcdir/gsm.options $pkgdir/etc/netctl/options/gsm.options
 }
