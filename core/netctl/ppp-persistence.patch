@@ -1,5 +1,5 @@
 --- src/netctl.in	2015-06-17 10:24:54.000000000 +0200
-+++ src/netctl.in.new	2016-02-18 10:28:21.553800718 +0200
++++ src/netctl.in.new	2016-04-05 15:14:05.558169541 +0200
 @@ -43,9 +43,14 @@
  # Wrapper around systemctl to convert profile names to unit names
  sd_call() {
@@ -16,7 +16,7 @@
  }
  
  list() {
-@@ -105,13 +110,20 @@
+@@ -105,26 +110,34 @@
  
  unit_enable() {
      local unit="@systemdsystemconfdir@/netctl@$(sd_escape "$1").service"
@@ -31,15 +31,42 @@
 -    load_profile "$1"
      do_readable touch "$unit"
 -    echo ".include @systemdsystemunitdir@/netctl@.service" > "$unit"
+-    echo -e "\n[Unit]" >> "$unit"
+-    [[ -n $Description ]] && echo "Description=$Description" >> "$unit"
+-    declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=$Interface
+-    if (( ${#BindsToInterfaces[@]} )); then
+-        : ${InterfaceRoot=sys/subsystem/net/devices/}
+-        printf "BindsTo=$(sd_escape "$InterfaceRoot")%s.device\n" \
+-               $(sd_escape "${BindsToInterfaces[@]}") >> "$unit"
+-        printf "After=$(sd_escape "$InterfaceRoot")%s.device\n" \
+-               $(sd_escape "${BindsToInterfaces[@]}") >> "$unit"
+-    fi
+-    if (( ${#After[@]} )); then
+-        printf 'After="netctl@%s.service"\n' \
+-               $(sd_escape "${After[@]}") >> "$unit"
 +    if $(is_yes ${PPPPersist:-no}) ; then
 +    	echo ".include @systemdsystemunitdir@/netctl-ppp@.service" > "$unit"
 +    else	
 +        echo ".include @systemdsystemunitdir@/netctl@.service" > "$unit"
-+    fi    
-     echo -e "\n[Unit]" >> "$unit"
-     [[ -n $Description ]] && echo "Description=$Description" >> "$unit"
-     declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=$Interface
-@@ -133,6 +145,10 @@
++        
++        echo -e "\n[Unit]" >> "$unit"
++        [[ -n $Description ]] && echo "Description=$Description" >> "$unit"
++        declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=$Interface
++       if (( ${#BindsToInterfaces[@]} )); then
++            : ${InterfaceRoot=sys/subsystem/net/devices/}
++            printf "BindsTo=$(sd_escape "$InterfaceRoot")%s.device\n" \
++                   $(sd_escape "${BindsToInterfaces[@]}") >> "$unit"
++            printf "After=$(sd_escape "$InterfaceRoot")%s.device\n" \
++                   $(sd_escape "${BindsToInterfaces[@]}") >> "$unit"
++       fi
++       if (( ${#After[@]} )); then
++            printf 'After="netctl@%s.service"\n' \
++                   $(sd_escape "${After[@]}") >> "$unit"
++       fi
+     fi
+     mkdir -p "@systemdsystemconfdir@/multi-user.target.wants"
+     echo "ln -s '$unit' '${unit/system\//system/multi-user.target.wants/}'"
+@@ -133,6 +146,10 @@
  
  unit_disable() {
      local unit="@systemdsystemconfdir@/netctl@$(sd_escape "$1").service"

@@ -2,7 +2,7 @@
 
 pkgname=netctl
 pkgver=1.11
-pkgrel=2
+pkgrel=3
 pkgdesc='Profile based systemd network management'
 url='http://projects.archlinux.org/netctl.git/'
 license=('GPL')
@@ -30,7 +30,7 @@ arch=('any')
 
 md5sums=('1465a0595af16fd88a5f1ecdcebc0f0c'
          'a810081becfc0d65f88cd9728384d3b7'
-         'c18b112fb17093f9b8bb7545f0e57963'
+         '8618a3bd8d6ed9a3d0654ae060ae156c'
          '5fff524c7c51c5b83ba6bda8ce3c9fb4')
 
 
