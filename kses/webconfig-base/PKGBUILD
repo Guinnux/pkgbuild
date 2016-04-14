@@ -1,13 +1,13 @@
 pkgname=webconfig-base
-pkgver=2.6.0
-pkgrel=2
+pkgver=2.7.0
+pkgrel=1
 pkgdesc="Guinnux webconfig base"
 arch=('any')
 license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
 depends=('lua' 'lighttpd' 'lsqlite3' 'lua-filesystem')
-source=('webconfig-base::git+http://gitlab.kses.net/guinnux-apps/webconfig-base.git')
+source=(webconfig-base::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
       
 md5sums=('SKIP')
 
