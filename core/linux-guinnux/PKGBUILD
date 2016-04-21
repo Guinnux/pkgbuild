@@ -25,8 +25,8 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         'b8dca4059c77ee1a9181d61d46ed8b9d')
-
+         'f62d9bbc67dd066406b1cd44eb15481b')
+        
 prepare() {
   
   msg2 "Extracting initramfs"
