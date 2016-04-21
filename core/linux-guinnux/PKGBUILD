@@ -10,7 +10,7 @@ _srcname=linux-${_commit}
 _kernelname=${pkgbase#linux-}
 _desc="Guinnux"
 pkgver=4.4.1
-pkgrel=3
+pkgrel=4
 _srcname=linux-${pkgver}
 arch=('arm')
 url="http://www.kernel.org/"
@@ -25,8 +25,8 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         '960e4f9a1f0a93b7b90d5a814f4b2b1a')
-                
+         'b8dca4059c77ee1a9181d61d46ed8b9d')
+
 prepare() {
   
   msg2 "Extracting initramfs"
