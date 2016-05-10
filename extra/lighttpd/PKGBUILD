@@ -3,7 +3,7 @@
 
 pkgname=lighttpd
 pkgver=1.4.35
-pkgrel=3
+pkgrel=4
 pkgdesc='A secure, fast, compliant and very flexible web-server'
 license=('custom')
 arch=('i686' 'x86_64')
@@ -22,9 +22,9 @@ source=("http://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-${pkgver}
 
 sha256sums=('113e9b72ccbd1da5deb0774bf93cf0ca15dc82aad2da0f04e5ab27d37d3f30a3'
             '41f6c0042bb61021553779f861910e335834f6c15e4411756cdc6233b31076fe'
-            'a4359e759db3c7a14856273cf4695660d62aec319f92e8167096670a0229b109'
+            '2029400d514e2a6a91ee8188de2ba5b19af60389f6a49d07ab01f5c54216ea1c'
             'd8a185145a7c08b4fd8c8e6c12dae3e176389dd9b1c66e239757b2ba5108c871'
-            '0c88403364e732c06090f6807105dedbac25aa82add0499d28007f8aaa780b78')
+            '9357ee60dd4320d9a836e7ff58b37a5ef81bed48120c2f6c8c2b922e56dddb8c')
 
 prepare() {
   cd $srcdir/$pkgname-$pkgver
@@ -39,7 +39,7 @@ prepare() {
 build() {
 	cd $srcdir/$pkgname-$pkgver
 
-	
+	echo $CROOT
 	./configure --prefix=/usr \
 	    LUA_CFLAGS=-I$CROOT/usr/include/lua5.1 \
 	    LUA_LIBS=-llua5.1 \
