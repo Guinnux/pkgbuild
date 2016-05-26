@@ -1,7 +1,7 @@
 #!/usr/bin/sh
 UNIT=$1
 if [ -e /etc/netctl/options/"$UNIT".hwinit ]; then
-  exec  /etc/netctl/options/"$UNIT".hwinit
+  /usr/bin/sh  /etc/netctl/options/"$UNIT".hwinit
 else
   echo "No such file /etc/netctl/options/$UNIT.hwinit"
 fi
