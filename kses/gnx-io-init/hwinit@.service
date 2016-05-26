@@ -1,5 +1,5 @@
 [Unit]
-Description=Hardware Initialisation
+Description=Hardware Initialisation for %I
 Before=basic.target
 BindsTo=dev-gnxio0
 After=dev-gnxio0 sysinit.target
@@ -8,7 +8,7 @@ DefaultDependencies=false
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/hwinit
+ExecStart=/usr/bin/hwctl init %I
 TimeoutSec=90
 
 [Install]

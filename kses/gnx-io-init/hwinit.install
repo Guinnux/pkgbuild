@@ -1,4 +1,0 @@
-post_install()
-{
-  /usr/bin/hwinit enable
-}
