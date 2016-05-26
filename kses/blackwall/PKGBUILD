@@ -1,6 +1,6 @@
 pkgname=blackwall
-pkgver=1.3.0
-pkgrel=3
+pkgver=1.4.0
+pkgrel=1
 pkgdesc="Blackwall port forwarding/NAT setup."
 arch=('any')
 backup=('etc/blackwall/blackwall.conf' 'etc/blackwall/forward')
@@ -9,7 +9,7 @@ url="http://www.guinnux.org"
 groups=('base')
 depends=('lua' 'gnxid' 'iptables' 'sed' 'coreutils')
 install=blackwall.install
-source=('blackwall::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
+source=(blackwall::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver}
          )
       
 md5sums=('SKIP'
@@ -17,8 +17,8 @@ md5sums=('SKIP'
                 
 package()
 {
-	install -D -m644 $srcdir/blackwall/blackwall/etc/blackwall/blackwall.lua $pkgdir/etc/blackwall/blackwall.lua
-	install -D -m644 $srcdir/blackwall/blackwall/etc/blackwall/blackwall.conf $pkgdir/etc/blackwall/blackwall.conf
-	install -D -m644 $srcdir/blackwall/blackwall/etc/blackwall/forward $pkgdir/etc/blackwall/forward
-	install -D -m644 $srcdir/blackwall/blackwall/lib/systemd/system/blackwall.service $pkgdir/usr/lib/systemd/system/blackwall.service
+	install -D -m644 $srcdir/blackwall/etc/blackwall/blackwall.lua $pkgdir/etc/blackwall/blackwall.lua
+	install -D -m644 $srcdir/blackwall/etc/blackwall/blackwall.conf $pkgdir/etc/blackwall/blackwall.conf
+	install -D -m644 $srcdir/blackwall/etc/blackwall/forward $pkgdir/etc/blackwall/forward
+	install -D -m644 $srcdir/blackwall/lib/systemd/system/blackwall.service $pkgdir/usr/lib/systemd/system/blackwall.service
 }
