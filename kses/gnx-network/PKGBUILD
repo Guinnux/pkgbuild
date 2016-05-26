@@ -1,6 +1,6 @@
 pkgname=gnx-network
 pkgver=3.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Guinnux Networking Configuration Scripts"
 arch=('any')
 license=('LGPL')

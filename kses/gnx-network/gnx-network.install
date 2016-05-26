@@ -88,7 +88,7 @@ generate_gsm()
 		cfg_if=\$(basename \${cfg[0]}) 
 		sed -i s%Interface=.*%Interface=\${cfg_if}% /etc/netctl/gsm
 		echo "#!/usr/bin/sh" > /etc/netctl/options/gsm.hwinit
-		echo "hwinit init \${cfg[1]}" >> /etc/netctl/options/gsm.hwinit
+		echo "hwctl init \${cfg[1]}" >> /etc/netctl/options/gsm.hwinit
 	else
 	    rm 	/etc/netctl/gsm
 	fi
