@@ -1,5 +1,5 @@
 pkgname=webconfig-base
-pkgver=2.8.0
+pkgver=2.9.0
 pkgrel=1
 pkgdesc="Guinnux webconfig base"
 arch=('any')
