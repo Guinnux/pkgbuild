@@ -1,0 +1,35 @@
+pkgname="lua-systemd"
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="LUA Bindings for libsystemd"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://www.kses.net/"
+depends=('lua' 'libsystemd')
+source=(git+http://gitlab.kses.net/guinnux-apps/lua-systemd.git )
+      
+
+md5sums=('SKIP')
+
+
+options=('strip' '!staticlibs')
+
+build()
+{
+	cd ${srcdir}/${pkgname}
+    make CXX=$CHOST-g++ all
+}
+
+package()
+{
+	if [ -n $CHOST ] ; then
+	 	PKGCONFIG=$CHOST-pkg-config
+	else
+	    PKGCONFIG=pkg-config
+	fi 
+	
+	LUAMODS_DIR=$(${PKGCONFIG} --variable=INSTALL_CMOD lua)
+	install -Dm0644 ${srcdir}/${pkgname}/systemd.lua ${pkgdir}/${LUAMODS_DIR}/systemd.lua
+	install -Dm0755 ${srcdir}/${pkgname}/luasystemd.so ${pkgdir}/${LUAMODS_DIR}/luasystemd.so
+}
+
