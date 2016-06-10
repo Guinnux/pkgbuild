@@ -1,12 +1,12 @@
 pkgname=gnx-network
 pkgver=3.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Guinnux Networking Configuration Scripts"
 arch=('any')
 license=('LGPL')
 url="http://www.guinnux.org"
 groups=('base')
-depends=('netctl' 'gnxid' 'sed' 'gnx-io-init')
+depends=('netctl' 'gnxid' 'sed' 'gnx-io-init' 'ppp')
 backup=('etc/netctl/lan'
         'etc/netctl/wan'
         'etc/netctl/usb'
@@ -22,12 +22,12 @@ source=('wan.template'
         'gsm.template'
         'gsm.options')
         
-md5sums=('5b7ba879fdd04e241163b332fa3f33b0'
+md5sums=('506db3ba257c7558c9c5961ebe860763'
          '43b72ff6ed77a2f4dff2283e8b4f1172'
          '83886035713ee098b2568ca75453a220'
          'db004c08fd496749e8e16d2edbc9ac34'
          'c811024ba0159868d599466a30d2d82f')
-
+        
 package()
 {
   install -D -m644 $srcdir/wan.template $pkgdir/etc/netctl/wan
