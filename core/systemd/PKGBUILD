@@ -22,14 +22,21 @@ source=("git://github.com/systemd/systemd.git#tag=v$pkgver"
         'initcpio-install-udev'
         'arch.conf'
         'loader.conf'
-        'splash-arch.bmp')
+        'splash-arch.bmp'
+        'gnx-rescue.sh'
+        'rescue-gnx.service'
+        'rescue.target')
+        
 md5sums=('SKIP'
          '90ea67a7bb237502094914622a39e281'
          '976c5511b6493715e381f43f16cdb151'
          '1b3aa3a0551b08af9305d33f85b5c2fc'
          '20ead378f5d6df4b2a3e670301510a7d'
          'ddaef54f68f6c86c6c07835fc668f62a'
-         '1e2f9a8b0fa32022bf0a8f39123e5f4e')
+         '1e2f9a8b0fa32022bf0a8f39123e5f4e'
+         '0c097a8e1ae4a587eef23644fba314d3'
+         '66778aa7fa62b34d2f28ea24ab23205e'
+         'e98ff83f561719b474437f042c6ffffb')        
 
 prepare() {
   cd "$pkgname"
@@ -158,6 +165,13 @@ package_systemd() {
   install -Dm644 "$srcdir/arch.conf" "$pkgdir"/usr/share/systemd/bootctl/arch.conf
   install -Dm644 "$srcdir/loader.conf" "$pkgdir"/usr/share/systemd/bootctl/loader.conf
   install -Dm644 "$srcdir/splash-arch.bmp" "$pkgdir"/usr/share/systemd/bootctl/splash-arch.bmp
+
+  # add rescue target and service
+  install -Dm644 "$srcdir/rescue.target"  "$pkgdir/usr/lib/systemd/system/rescue.target"
+  install -Dm644 "$srcdir/rescue-gnx.service"  "$pkgdir/usr/lib/systemd/system/rescue-gnx.service"
+  install -Dm755 "$srcdir/gnx-rescue.sh"  "$pkgdir/usr/bin/gnx-rescue.sh"
+
+
 }
 
 package_libsystemd() {
