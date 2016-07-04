@@ -1,32 +1,21 @@
 pkgname=libkdb
-pkgver=1.2.3
+pkgver=1.2.4
 pkgrel=1
 pkgdesc="KSES bject Persistence Interface library"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
 depends=('sqlite3')
-source=('libkdb::git+http://bugz.kses.net/gitrepo/KLib/kdb.git')
+source=(libkdb::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
-
 build()
 {
   cd $srcdir/$pkgname
+  autoreconf -fi 
   ./configure --host=$CHOST \
               --prefix=/usr 
               
