@@ -1,32 +1,21 @@
 pkgname=liblkmsg
 pkgver=1.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc="KSES Messaging Library for Lua"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
 depends=('libklog' 'libkmsg' 'lua')
-source=('liblkmsg::git+http://bugz.kses.net/gitrepo/KLib/lkmsg.git')
+source=(liblkmsg::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
-
 build()
 {
   cd $srcdir/$pkgname
+  autoreconf -fi > /dev/null
   ./configure --host=$CHOST \
             --prefix=/usr \
             --libdir=/usr/share/lua/kses
