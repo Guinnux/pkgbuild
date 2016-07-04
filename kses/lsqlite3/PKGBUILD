@@ -1,6 +1,6 @@
 pkgname=lsqlite3
 pkgver=0.9.3
-pkgrel=1
+pkgrel=2
 pkgdesc="LUA Bindings for sqlite3"
 arch=('i686' 'x86_64')
 license=('LGPL')
@@ -11,9 +11,8 @@ source=(${pkgname}-${pkgver}.tar.gz
       
 
 md5sums=('ec3ec1b8a5ef1bf36c74fee60b9d44bd'
-         'fc33929ecc931fadd46400504c6f2609')
-
-
+         '01f619d6a96be9882c753690acb08fae')
+        
 options=('strip' '!staticlibs')
 
 build()

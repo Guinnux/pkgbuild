@@ -12,7 +12,7 @@ all: lib
 lib: lsqlite3.so
 	
 lsqlite3.o: lsqlite3.c
-	$(CC) -O2 -fPIC -I/usr/include -c $< -o $@ -DLSQLITE_VERSION="\"0.9.3\"" -I/usr/include
+	$(CC) -O2 -fPIC -c $< -o $@ -DLSQLITE_VERSION="\"0.9.3\"" 
 	
 
 lsqlite3.so: lsqlite3.o
