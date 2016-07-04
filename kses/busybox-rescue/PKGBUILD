@@ -11,6 +11,7 @@ license=('GPL')
 packager="John Eigelaar <john@kses.net>"
 provides=('sh' 'bash')
 conflicts=('bash')
+depends=('glibc')
 options=('strip' '!docs' '!libtool' '!staticlibs')
 source=('http://guinnux.kses.net/v5/source/busybox-1.21.1.tar.bz2'   
         'config'
