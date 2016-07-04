@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# the /etc/profile script is run on any login (i.e. ssh logins, login)
+
+# the /etc/ashrc is run on non-login and login situations [i.e. ssh logins, login, su (non-login shell started), su -l (login shell started)]
+export ENV=/etc/ashrc

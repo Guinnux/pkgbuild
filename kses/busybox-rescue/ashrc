@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# if EUID has not been set, determine th EUID of the current user
+if [ -z "$EUID" ]; then
+        EUID=`id -u`
+        UID=`id -ru`
+fi
+
+# set the PATH and prompt according to the user
+if [ $EUID -eq 0 ]; then
+        export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+        # red prompt for root
+        export PS1="\[\e[1;31m\]\h:\w # \[\e[0m\]"
+else
+        export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+        export PS1="\h:\w $ "
+fi
