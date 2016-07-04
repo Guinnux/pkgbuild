@@ -1,34 +1,22 @@
 pkgname=gnxio
 pkgver=1.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Guinnux IO Manipulation Helper"
 arch=('i686' 'x86_64')
 license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
-source=('gnxio::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git')
+source=(gnxio::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
         
 md5sums=('SKIP') 
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-  
-  cd $srcdir/$pkgname/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-  
-}
-
 build()
 {
-  cd $srcdir/$pkgname/$pkgname
+  cd $srcdir/$pkgname
+  autoreconf -fi
   ./configure --host=$CHOST \
               --prefix=/usr \
              
@@ -37,7 +25,6 @@ build()
 
 package()
 {
-  cd $srcdir/$pkgname/$pkgname
+  cd $srcdir/$pkgname
   make DESTDIR=$pkgdir install
-  
 }
