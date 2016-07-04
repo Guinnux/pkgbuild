@@ -1,32 +1,21 @@
 pkgname=libklink
 pkgver=1.2.1
-pkgrel=1
+pkgrel=2
 pkgdesc="KSES Multidrop Bus Link Layer"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
 depends=('libklog')
-source=('libklink::git+http://bugz.kses.net/gitrepo/KLib/libklink.git')
+source=(libklink::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
-
 build()
 {
   cd $srcdir/$pkgname
+  autoreconf -fi > /dev/null
   ./configure --host=$CHOST \
               --prefix=/usr 
               
