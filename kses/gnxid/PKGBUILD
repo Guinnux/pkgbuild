@@ -7,7 +7,7 @@ license=('GPL')
 url="http://www.guinnux.org"
 groups=('base' 'rescue')
 depends=('libklog')
-source=('gnxid::git+http://bugz.kses.net/gitrepo/Guinnux/kses.git'
+source=(gnxid::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver}
         'gnxid.conf')
         
 md5sums=('SKIP'
@@ -16,22 +16,10 @@ md5sums=('SKIP'
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-  
-  cd $srcdir/$pkgname/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-  
-}
-
 build()
 {
-  cd $srcdir/$pkgname/$pkgname
+  cd $srcdir/$pkgname
+  autoreconf -fi 
   ./configure --host=$CHOST \
               --prefix=/usr \
               --sysconfdir=/etc
@@ -41,7 +29,7 @@ build()
 
 package()
 {
-  cd $srcdir/$pkgname/$pkgname
+  cd $srcdir/$pkgname
   make DESTDIR=$pkgdir install
   install -Dm644 "$srcdir"/gnxid.conf "$pkgdir"/etc/gnxid.conf
   
