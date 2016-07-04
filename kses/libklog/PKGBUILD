@@ -1,5 +1,5 @@
 pkgname=libklog
-pkgver=1.1
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="KSES Logging, tracing and debug library"
 arch=('i686' 'x86_64')
@@ -7,27 +7,17 @@ license=('LGPL')
 url="http://www.guinnux.org"
 groups=('base' 'rescue')
 depends=('log4cpp')
-source=('libklog::git+http://bugz.kses.net/gitrepo/KLib/libklog.git')
+source=(libklog::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
 
 build()
 {
   cd $srcdir/$pkgname
+  autoreconf -fi
   ./configure --host=$CHOST \
               --prefix=/usr 
               
