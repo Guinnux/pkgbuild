@@ -1,32 +1,22 @@
 pkgname=libkmsg
 pkgver=1.5.2
-pkgrel=1
+pkgrel=2
 pkgdesc="KSES Messaging Library"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
 depends=('libklog')
-source=('libkmsg::git+http://bugz.kses.net/gitrepo/KLib/kmsg.git')
+source=(libkmsg::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
 md5sums=('SKIP')
 
 options=('strip' '!staticlibs')
 
 
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
 
 build()
 {
   cd $srcdir/$pkgname
+  autoreconf -fi
   ./configure --host=$CHOST \
               --prefix=/usr 
               
