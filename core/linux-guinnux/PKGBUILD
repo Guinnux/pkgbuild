@@ -20,12 +20,14 @@ options=('!strip')
 source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
          "git+http://gitlab.kses.net/guinnux/kernel-patches.git"
          "git+http://gitlab.kses.net/guinnux/initramfs.git"
-        'guinnux.config')
+        'guinnux-arm.config'
+        'guinnux-aarch64.config')
 
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         'f62d9bbc67dd066406b1cd44eb15481b')
+         'f62d9bbc67dd066406b1cd44eb15481b'
+         'SKIP')
         
 prepare() {
   
@@ -46,7 +48,7 @@ prepare() {
   cp -dvR ${srcdir}/kernel-patches/*/ .
  
   msg "Prepare to build"
-  cat "${srcdir}/guinnux.config" > ./.config
+  cat "${srcdir}/guinnux-${CARCH}.config" > ./.config
   sed -e  "s|CONFIG_INITRAMFS_SOURCE=.*|CONFIG_INITRAMFS_SOURCE=\"${srcdir}/initramfs/initramfs\"|g" -i ./.config
   # don't run depmod on 'make install'. We'll do this ourselves in packaging
   sed -i '2iexit 0' scripts/depmod.sh
@@ -54,18 +56,24 @@ prepare() {
 
 build() {
   cd "${srcdir}/${_srcname}"
+KARCH=arm
+IMAGE=zImage
 
+if [ "$CARCH" == "aarch64" ]; then
+	KARCH=arm64
+	IMAGE=Image.gz
+fi 
   # get kernel version
-  msg "Peparing with $CHOST"
-  make  ARCH=arm CROSS_COMPILE=${CHOST}- prepare
+  msg "Peparing with $CHOST($KARCH)"
+ make  ARCH=$KARCH CROSS_COMPILE=${CHOST}- prepare
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
-  #make  ARCH=arm CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
+  make  ARCH=$KARCH CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
-  cp ./.config ../../${pkgver}.config
+cp ./.config ../../${pkgver}-${CARCH}.config
 
   ####################
   # stop here
@@ -77,7 +85,7 @@ build() {
   #yes "" | make config
 
   msg "Building!"
-make ARCH=arm CROSS_COMPILE=${CHOST}- zImage modules dtbs
+make ARCH=$KARCH CROSS_COMPILE=${CHOST}- ${IMAGE} modules dtbs
 
 }
 
@@ -91,24 +99,34 @@ _package() {
   install=${pkgname}.install
 
   cd "${srcdir}/${_srcname}"
+KARCH=arm
+IMAGE=zImage
 
-  KARCH=arm
+if [ "$CARCH" == "aarch64" ]; then
+	KARCH=arm64
+	IMAGE=Image.gz
+fi 
 
+ msg2 "Getting Kernel version"
   # get kernel version
-  _kernver="$(make ARCH=arm CROSS_COMPILE=${CHOST}- kernelrelease)"
+  _kernver="$(make ARCH=${KARCH} CROSS_COMPILE=${CHOST}- kernelrelease)"
 
    msg2 "Installing modules"
   mkdir -p "${pkgdir}"/{lib/modules,lib/firmware,boot/overlays}
-  make ARCH=arm CROSS_COMPILE=${CHOST}- INSTALL_MOD_PATH="${pkgdir}" modules_install
+make ARCH=${KARCH} CROSS_COMPILE=${CHOST}- INSTALL_MOD_PATH="${pkgdir}" modules_install
  
   msg2 "Installing kernel image"
- cp  arch/$KARCH/boot/zImage ${pkgdir}/boot/zImage-${_kernver}
+cp  arch/$KARCH/boot/$IMAGE ${pkgdir}/boot/$IMAGE-${_kernver}
   
   msg2 "Installing DTBs"
-if [ -e  arch/$KARCH/boot/dts/overlays ] ; then
-  mv arch/$KARCH/boot/dts/overlays/*.dtb "${pkgdir}/boot/overlays"
-fi
-  mv arch/$KARCH/boot/dts/*.dtb "${pkgdir}/boot"
+ if [ "$CARCH" == "aarch64" ]; then
+  mv arch/$KARCH/boot/dts/*/*.dtb "${pkgdir}/boot"
+ else
+	if [ -e  arch/$KARCH/boot/dts/overlays ] ; then
+         mv arch/$KARCH/boot/dts/overlays/*.dtb "${pkgdir}/boot/overlays"
+    fi
+    mv arch/$KARCH/boot/dts/*.dtb "${pkgdir}/boot"
+ fi
 
 
   msg2 "Fixing install script"
@@ -260,7 +278,11 @@ fi
   done
 
   # remove unneeded architectures
+ if [ "$CARCH" == "aarch64" ]; then
+  rm -rf "${pkgdir}"/usr/lib/modules/${_kernver}/build/arch/{alpha,arc,arm26,arm,avr32,blackfin,c6x,cris,frv,h8300,hexagon,ia64,m32r,m68k,m68knommu,metag,mips,microblaze,mn10300,openrisc,parisc,powerpc,ppc,s390,score,sh,sh64,sparc,sparc64,tile,unicore32,um,v850,x86,xtensa}
+ else
   rm -rf "${pkgdir}"/usr/lib/modules/${_kernver}/build/arch/{alpha,arc,arm26,arm64,avr32,blackfin,c6x,cris,frv,h8300,hexagon,ia64,m32r,m68k,m68knommu,metag,mips,microblaze,mn10300,openrisc,parisc,powerpc,ppc,s390,score,sh,sh64,sparc,sparc64,tile,unicore32,um,v850,x86,xtensa}
+ fi
 }
 
 pkgname=("${pkgbase}" "${pkgbase}-headers")
