@@ -18,8 +18,8 @@ license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'git')
 options=('!strip')
 source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
-         "git+http://gitlab.kses.net/guinnux/kernel-patches.git"
-         "git+http://gitlab.kses.net/guinnux/initramfs.git"
+        "git+http://gitlab.kses.net/guinnux/kernel-patches.git"
+        "git+http://gitlab.kses.net/guinnux/initramfs.git#branch=pacman_gen"
         'guinnux-arm.config'
         'guinnux-aarch64.config')
 
@@ -33,7 +33,7 @@ prepare() {
   
   msg2 "Extracting initramfs"
   cd "${srcdir}/initramfs"
-  tar -xf ./initramfs.tar.gz  
+tar -xf ./initramfs-${CARCH}.tar.gz  
   cd "${srcdir}/${_srcname}"
 
 
@@ -49,15 +49,15 @@ prepare() {
  
   msg "Prepare to build"
   cat "${srcdir}/guinnux-${CARCH}.config" > ./.config
-  sed -e  "s|CONFIG_INITRAMFS_SOURCE=.*|CONFIG_INITRAMFS_SOURCE=\"${srcdir}/initramfs/initramfs\"|g" -i ./.config
+sed -e  "s|CONFIG_INITRAMFS_SOURCE=.*|CONFIG_INITRAMFS_SOURCE=\"${srcdir}/initramfs/image/${CARCH}\"|g" -i ./.config
   # don't run depmod on 'make install'. We'll do this ourselves in packaging
   sed -i '2iexit 0' scripts/depmod.sh
 }
 
 build() {
   cd "${srcdir}/${_srcname}"
-KARCH=arm
-IMAGE=zImage
+  KARCH=arm
+  IMAGE=zImage
 
 if [ "$CARCH" == "aarch64" ]; then
 	KARCH=arm64
@@ -73,7 +73,7 @@ fi
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
-cp ./.config ../../${pkgver}-${CARCH}.config
+  cp ./.config ../../${pkgver}-${CARCH}.config
 
   ####################
   # stop here
@@ -85,7 +85,7 @@ cp ./.config ../../${pkgver}-${CARCH}.config
   #yes "" | make config
 
   msg "Building!"
-make ARCH=$KARCH CROSS_COMPILE=${CHOST}- ${IMAGE} modules dtbs
+  make ARCH=$KARCH CROSS_COMPILE=${CHOST}- ${IMAGE} modules dtbs
 
 }
 
