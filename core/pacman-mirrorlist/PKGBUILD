@@ -1,7 +1,7 @@
 # Maintainer: Kevin Mihelich <kevin@archlinuxarm.org>
 
 pkgname=pacman-mirrorlist
-pkgver=20151214
+pkgver=20160714
 pkgrel=1
 pkgdesc="Guinnux ARM mirror list for use by pacman"
 arch=('any')
@@ -10,7 +10,7 @@ license=('GPL')
 groups=('base')
 backup=(etc/pacman.d/mirrorlist)
 source=(mirrorlist)
-md5sums=('ec690a032574af4a663e9f2177b2ac9e')
+md5sums=('d2c252472918d4db4d83f713d66cf259')
 
 package() {
   mkdir -p $pkgdir/etc/pacman.d
