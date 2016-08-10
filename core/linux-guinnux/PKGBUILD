@@ -10,7 +10,7 @@ _srcname=linux-${_commit}
 _kernelname=${pkgbase#linux-}
 _desc="Guinnux"
 pkgver=4.4.1
-pkgrel=5
+pkgrel=6
 _srcname=linux-${pkgver}
 arch=('arm')
 url="http://www.kernel.org/"
@@ -26,8 +26,8 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         'f62d9bbc67dd066406b1cd44eb15481b'
-         'SKIP')
+         'a85c5e50e93b35d4b5fad5827dbd8dac'
+         'e6060e683daaa65f24c8790939dfe9b8')
         
 prepare() {
   
