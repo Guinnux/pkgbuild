@@ -2,12 +2,12 @@
 
 pkgname=netctl
 pkgver=1.11
-pkgrel=4
+pkgrel=5
 pkgdesc='Profile based systemd network management'
 url='http://projects.archlinux.org/netctl.git/'
 license=('GPL')
 groups=('base')
-depends=('coreutils' 'iproute2' 'openresolv' 'systemd')
+depends=('coreutils' 'iproute2' 'openresolv' 'systemd' 'ppp')
 # The source tarball includes pre-built (using asciidoc) documentation.
 makedepends=('pkg-config')
 optdepends=('dialog: for the menu based wifi assistant'
@@ -16,22 +16,25 @@ optdepends=('dialog: for the menu based wifi assistant'
             'wpa_supplicant: for wireless networking support'
             'ifplugd: for automatic wired connections through netctl-ifplugd'
             'wpa_actiond: for automatic wireless connections through netctl-auto'
-            'ppp: for PPP connections'
             'openvswitch: for Open vSwitch connections'
            )
 source=(https://sources.archlinux.org/other/packages/netctl/netctl-${pkgver}.tar.xz
         'netctl-ppp@.service'
         'ppp-persistence.patch'
-        'ppp.hwinit')
+        'ppp.hwinit'
+        'led-up.sh'
+        'led-down.sh')
 
 
 
 arch=('any')
 
 md5sums=('1465a0595af16fd88a5f1ecdcebc0f0c'
-         'a810081becfc0d65f88cd9728384d3b7'
+         'aab340dd11349e34ccebbad50d9ae9da'
          '8618a3bd8d6ed9a3d0654ae060ae156c'
-         '983dde79eb5c56c6a4ee848d7377adec')
+         '983dde79eb5c56c6a4ee848d7377adec'
+         '95137643cb83bc8a6036ad8284cef1f4'
+         'b4e9731ec9c2adf6de1f3c05ac00b324')
 
 prepare() {
 	cd "$srcdir/netctl-${pkgver}"
@@ -50,5 +53,7 @@ package() {
   cd "$srcdir"
   install -D -m644 "netctl-ppp@.service"  "$pkgdir/usr/lib/systemd/system/netctl-ppp@.service"
   install -D -m755 "ppp.hwinit"  "$pkgdir/etc/netctl/options/ppp.hwinit"
+  install -D -m755 "led-up.sh"  "$pkgdir/etc/ppp/ip-up.d/10-led-up.sh"
+  install -D -m755 "led-down.sh"  "$pkgdir/etc/ppp/ip-down.d/10-led-down.sh"
 }
 
