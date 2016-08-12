@@ -3,7 +3,7 @@
 
 pkgname=openvpn
 pkgver=2.3.6
-pkgrel=2
+pkgrel=3
 pkgdesc="An easy-to-use, robust, and highly configurable VPN (Virtual Private Network)"
 arch=(i686 x86_64)
 url="http://openvpn.net/index.php/open-source.html"
@@ -16,14 +16,18 @@ source=(http://swupdate.openvpn.net/community/releases/openvpn-${pkgver}.tar.gz
         openvpn.conf
         ca.crt
         client.crt
-        client.key)
+        client.key
+        led-up.sh
+        led-down.sh)
 
 sha256sums=('7baed2ff39c12e1a1a289ec0b46fcc49ff094ca58b8d8d5f29b36ac649ee5b26'
             '860976d954bd1db95861b95f0ef42e4e80618aa23a9f2aed26d17ee3d09110df'
-            '7539366fac2da90f9f60c5af24316706948bb4384917a54274f735ab4db6873d'
+            'f9db4bf4d74a25f78d86c2a21525465c21c05dff4d973acce9bc7c76a9efdf70'
             '8745608faca8e2a1e8285ab03277c9d8a62046b537cb77cffa296a22b2500348'
             '7162f136cc27dc9fb021a385c4ca6cf5651dd889ead4d0ca796ea2983172de1a'
-            'dc63d6fe63011c68b09bb3d3636379d9731ad9fac77fcca1ea6918e373ebd08e')
+            'dc63d6fe63011c68b09bb3d3636379d9731ad9fac77fcca1ea6918e373ebd08e'
+            '78b6d45c6490b16eab0f211e98e9a82fa12f90313bd1be84266ad80f48d0926e'
+            'baad2b7b3c07664e886c2ffb49cf90f80a748a0739764e9d53d5189baef1a064')
 
 
 build() {
@@ -48,7 +52,8 @@ package() {
   install -D -m600 "${srcdir}"/ca.crt "${pkgdir}"/etc/openvpn/ca.crt
   install -D -m600 "${srcdir}"/client.crt "${pkgdir}"/etc/openvpn/client.crt
   install -D -m600 "${srcdir}"/client.key "${pkgdir}"/etc/openvpn/client.key
-  
+  install -D -m755 "${srcdir}"/led-up.sh "${pkgdir}"/etc/openvpn/led-up.sh
+  install -D -m755 "${srcdir}"/led-down.sh "${pkgdir}"/etc/openvpn/led-down.sh
   
   # Install examples
   install -d -m755 "${pkgdir}"/usr/share/openvpn
