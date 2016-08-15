@@ -5,6 +5,7 @@ Description=OpenVPN connection to %i
 Type=forking
 ExecStart=/usr/bin/openvpn --cd /etc/openvpn --config /etc/openvpn/%i.conf --daemon openvpn@%i --writepid /run/openvpn@%i.pid
 PIDFile=/run/openvpn@%i.pid
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

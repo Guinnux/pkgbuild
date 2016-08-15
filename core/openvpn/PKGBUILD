@@ -3,7 +3,7 @@
 
 pkgname=openvpn
 pkgver=2.3.6
-pkgrel=3
+pkgrel=4
 pkgdesc="An easy-to-use, robust, and highly configurable VPN (Virtual Private Network)"
 arch=(i686 x86_64)
 url="http://openvpn.net/index.php/open-source.html"
@@ -11,6 +11,7 @@ depends=('openssl' 'lzo' 'iproute2' 'libsystemd')
 makedepends=('systemd')
 license=('custom')
 install=openvpn.install
+backup=(etc/openvpn/openvpn.conf)
 source=(http://swupdate.openvpn.net/community/releases/openvpn-${pkgver}.tar.gz
         openvpn@.service
         openvpn.conf
@@ -18,17 +19,25 @@ source=(http://swupdate.openvpn.net/community/releases/openvpn-${pkgver}.tar.gz
         client.crt
         client.key
         led-up.sh
-        led-down.sh)
+        led-down.sh
+        resolv.patch)
 
 sha256sums=('7baed2ff39c12e1a1a289ec0b46fcc49ff094ca58b8d8d5f29b36ac649ee5b26'
-            '860976d954bd1db95861b95f0ef42e4e80618aa23a9f2aed26d17ee3d09110df'
-            'f9db4bf4d74a25f78d86c2a21525465c21c05dff4d973acce9bc7c76a9efdf70'
+            '1065e4bc8eaf7f9c74719a3c2821e785fc41e0fde72875dbb7da338388e7fe06'
+            '0692a347049af6e572426429dd4aaf86896367ecf798a3839ccce7c60f582019'
             '8745608faca8e2a1e8285ab03277c9d8a62046b537cb77cffa296a22b2500348'
             '7162f136cc27dc9fb021a385c4ca6cf5651dd889ead4d0ca796ea2983172de1a'
             'dc63d6fe63011c68b09bb3d3636379d9731ad9fac77fcca1ea6918e373ebd08e'
             '78b6d45c6490b16eab0f211e98e9a82fa12f90313bd1be84266ad80f48d0926e'
-            'baad2b7b3c07664e886c2ffb49cf90f80a748a0739764e9d53d5189baef1a064')
+            'baad2b7b3c07664e886c2ffb49cf90f80a748a0739764e9d53d5189baef1a064'
+            '70de37c494351e06e8a7aafb4f2474e29dff6b882fdc8ba1cb0655806c8f9465')
 
+
+
+prepare() {
+	cd "${srcdir}"/$pkgname-$pkgver
+	patch -p0 < "${srcdir}"/resolv.patch
+}
 
 build() {
   cd "${srcdir}"/$pkgname-$pkgver

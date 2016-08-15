@@ -1,0 +1,11 @@
+--- src/openvpn/socket.c	2014-11-29 17:00:35.000000000 +0200
++++ src/openvpn/socket-new.c	2016-08-15 13:39:40.886300356 +0200
+@@ -1285,7 +1285,7 @@
+ 	      if (status!=0)
+ 		{
+ 		  if (signal_received)
+-		    *signal_received = SIGUSR1;
++		    *signal_received = SIGTERM;
+ 		  goto done;
+ 		}
+ 	    }
