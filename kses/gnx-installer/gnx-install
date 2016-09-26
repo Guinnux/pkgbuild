@@ -18,6 +18,12 @@ else
         exit 1
 fi
 
+CNT=$(gnxid -l|grep -c "Raspberry")
+if [ $CNT -gt 0 ]; then
+   echo "This is a Raspberry Pi. Adjusting package list"
+   sed -i 's/linux-guinnux/linux-gnxpi/g' $PKG_LIST
+fi
+
 PACMAN_CMD="pacman --cachedir $GNX_PATH/var/cache/pacman/pkg -r $GNX_PATH"
 PACKAGES=$(cat $PKG_LIST)
 mkdir -p $GNX_PATH/var/lib/pacman
@@ -53,7 +59,6 @@ chroot $GNX_PATH systemctl enable ntpdate
 chroot $GNX_PATH systemctl enable ntpd
 chroot $GNX_PATH systemctl enable blackwall
 chroot $GNX_PATH systemctl enable hwinit
-chroot $GNX_PATH systemctl enable watchdog
 chroot $GNX_PATH systemctl enable cronie
 
 echo "${txtbld}${txtblue}That's all folks${txtreset}"

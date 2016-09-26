@@ -17,12 +17,61 @@ if [ "`id -u`" != "0" ]; then
         exit 1
 fi
 
+#Get the disk layout and setup from the command line or use the defaults
+for i in $(cat /proc/cmdline); do
+	case $i in
+		root\=*)
+			root="`echo $i | awk -F"root=" '{print $2}' | awk -F" " '{print $1}'`"
+			;;
+		root_type\=*)
+			root_type="-t `echo $i | awk -F"root_type=" '{print $2}' | awk -F" " '{print $1}'`"
+			FS_TYPE="`echo $i | awk -F"root_type=" '{print $2}' | awk -F" " '{print $1}'`"
+			;;
+		root_opts\=*)
+			root_opts="-o `echo $i | awk -F"root_opts=" '{print $2}' | awk -F" " '{print $1}'`"
+			;;
+		init\=*)
+			init="`echo $i | awk -F"init=" '{print $2}' | awk -F" " '{print $1}'`"
+			;;
+        rescue\=*)
+            rescue="`echo $i | awk -F"rescue=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        rescue_type\=*)
+            rescue_type="-t `echo $i | awk -F"rescue_type=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        rescue_opts\=*)
+            rescue_opts="-o `echo $i | awk -F"rescue_opts=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        boot\=*)
+            boot="`echo $i | awk -F"boot=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        boot_type\=*)
+            boot_type="-t `echo $i | awk -F"boot_type=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        boot_opts\=*)
+            boot_opts="-o `echo $i | awk -F"boot_opts=" '{print $2}' | awk -F" " '{print $1}'`"
+            ;;
+        bootrescue*)
+            bootrescue="yes"
+            ;;    
+	esac
+done
 
-if [ -z "$FS_TYPE" ]; then
-	FS_TYPE="ext4"
+
+if [ -z "$root" ]; then root="/dev/mmcblk0p1"; fi
+if [ -z "$root_type" ]; then root_type="-t ext4"; FS_TYPE="ext4"; fi
+if [ -z "$root_opts" ]; then root_opts="-o data=journal"; fi
+if [ -z "$init" ]; then init="/sbin/init"; fi
+if [ -z "$rescue" ]; then rescue="/dev/mtdblock1"; fi
+if [ -z "$rescue_type" ]; then rescue_type="-t jffs2"; fi
+if [ -z "$rescue_opts" ]; then rescue_opts="-o ro"; fi
+if [ ! -z "$boot" ]; then
+	if [ -z "$boot_type" ]; then boot_type="-t jffs2"; fi
+	if [ -z "$boot_opts" ]; then boot_opts="-o rw"; fi
 fi
 
 mkdir /mnt/gnx -p
+
 
 echo "Starting Guinnux installer..."
 echo    "${txtbld}${txtblue}######################   Guinnux Installer  ########################${txtreset}"
@@ -35,80 +84,60 @@ echo    "The installer will now proceed. Before the main setup begins,\
  please confirm the following installation specifications." | fold -s
 echo ""
 
-# incase the SD card is /dev/mmcblk"." where "." is not 0, we allow the disk to be specified
-if [ -n "$DISK" ]; then
-        echo -e -n  "${txtund}${txtblue}Target disk:${txtreset} $DISK\t"
-        echo -e -n "\n${txtbld}${txtyellow} WARN: This is not the standard disk device. Installing to\
- this disk should work provided that it is /dev/mmcblk0 during startup.${txtreset}" | fold -s
+echo "Using the following parameters:"
+echo " root = '$root'"
+echo " root_type = '$root_type'"
+echo " FSTYPE = '$FS_TYPE'"
+echo " root_opts = '$root_opts'"
+if [ ! -z $boot ]; then
+echo " boot = '$boot'"
+echo " boot_type = '$boot_type'"
+echo " boot_opts = '$boot_opts'"
+fi
+
+PART=$root
+if [ -z $DISK ]; then
+	DISK="/dev/mmcblk0"
+fi
+
+if [ -e $root ]; then
+    echo "The root partition already exists. Will just format the filesystem."
 else
-        DISK=/dev/mmcblk0
-        echo -e -n  "${txtund}${txtblue}Target disk:${txtreset} $DISK\t"
-fi
-# check if $DISK is a block device
-if [ -b $DISK ]; then
-        echo -e "${txtbld}${txtblue}[ OK ]${txtreset}"
-else
-        echo -e "\n${txtbld}${txtred}$DISK is not a block device, have you inserted the SD card${txtreset}"
-	echo "NOTE: you can specify another block device file by setting DISK to its full path"
-        echo -e "Aborting...\n"
-        exit 1
-fi
-
-# determine the partition
-NON_STANDARD_BUILD=false
-if [ -n "$PART" ]; then
-	echo -e "${txtund}${txtblue}Target partition:${txtreset} $PART"
-        echo -e "${txtbld}${txtyellow} WARN: This is not the standard partition device. Installing to\
- this partition should work provided that root is set to $PART in the kernel cmdline and that Guinnux root's\
- fstab is edited appropriately so as to remount with the correct fs type and options (do this after the install).${txtreset}" | fold -s
-	NON_STANDARD_BUILD=true
-else
-	PART="${DISK}p1"
-	echo -e "${txtund}${txtblue}Target partition:${txtreset} $PART\t"	
-fi
-echo -e "${txtund}${txtblue}Partition format:${txtreset} $FS_TYPE"
-if [ "$FS_TYPE" != "ext4" ]; then
-	echo -e -n "${txtbld}${txtyellow} WARN: This is not the standard format for the root partition. Using this\
- formatting should work provided that root_type is set to the name of the file system type in the kernel cmdline and that Guinnux root's\
- fstab is edited appropriately so as to remount with the correct fs type and options (do this after the install).${txtreset}" | fold -s
-	NON_STANDARD_BUILD=true
-fi
-echo ""
-
-# state some more details about the partition setup
-echo -e "${txtund}${txtblue}Current partition table (will be lost on install!):${txtreset}"
-/sbin/fdisk -l $DISK | grep -v '^$' | fold -s
-
-echo ""
-
-# prompt for if we must continue
-while true; do
-        read -p "Do you want to overwrite the partition table? (${txtbld}y${txtreset}es / ${txtbld}n${txtreset}o / ${txtbld}a${txtreset}bort) : " choice
-        case $choice in
-                [y]* )
-                        echo -e "Partition table will be ${txtbld}overwritten${txtreset} when setup begins.\n" ;
-                        SAVE=0;
-                        break;;
-                [n]* )
-                        echo -e "Partition table will be ${txtbld}preserved${txtreset} when setup begins...\n" ;
-                        SAVE=1;
-                        break;;
-                [a]* )
-                        echo -e "Aborting...\n" ;
-                        exit 0;;
-        esac
-done
-
-if [ "$SAVE" == 0 ]; then
-    echo "${txtbld}${txtblue}Creating new empty DOS partition table on $DISK...${txtreset}"
-    fdisk $DISK > /dev/null 2>&1 << EOF
+	echo "The root partion does not exist. Will have to create a new partition table"
+	# state some more details about the partition setup
+	echo -e "${txtund}${txtblue}Current partition table (will be lost on install!):${txtreset}"
+	/sbin/fdisk -l $DISK | grep -v '^$' | fold -s
+	
+	echo ""
+	
+	# prompt for if we must continue
+	while true; do
+	        read -p "Do you want to overwrite the partition table? (${txtbld}y${txtreset}es / ${txtbld}n${txtreset}o / ${txtbld}a${txtreset}bort) : " choice
+	        case $choice in
+	                [y]* )
+	                        echo -e "Partition table will be ${txtbld}overwritten${txtreset} when setup begins.\n" ;
+	                        SAVE=0;
+	                        break;;
+	                [n]* )
+	                        echo -e "Partition table will be ${txtbld}preserved${txtreset} when setup begins...\n" ;
+	                        SAVE=1;
+	                        break;;
+	                [a]* )
+	                        echo -e "Aborting...\n" ;
+	                        exit 0;;
+	        esac
+	done
+	
+	if [ "$SAVE" == 0 ]; then
+	    echo "${txtbld}${txtblue}Creating new empty DOS partition table on $DISK...${txtreset}"
+	    fdisk $DISK > /dev/null 2>&1 << EOF
 o
 v
 w
 EOF
-
-    echo "${txtbld}${txtblue}Creating new partition on $DISK...${txtreset}"
-    fdisk -u $DISK > /dev/null 2>&1 << EOF
+	
+	    echo "${txtbld}${txtblue}Creating new partition on $DISK...${txtreset}"
+	    fdisk -u $DISK > /dev/null 2>&1 << EOF
 n
 p
 1
@@ -117,10 +146,12 @@ p
 v
 w
 EOF
-
-else
-    echo "${txtbld}${txtblue}Partition table on $DISK will not be changed${txtreset}..."
+	
+	else
+	    echo "${txtbld}${txtblue}Partition table on $DISK will not be changed${txtreset}..."
+	fi
 fi
+
 
 echo "${txtbld}${txtblue}Creating $FS_TYPE filesystem on $PART...${txtreset}"
 mkfs.$FS_TYPE $PART
@@ -143,6 +174,11 @@ if [ -z "$PART" ]; then
 	PART="/dev/mmcblk0p1"
 fi
 
+echo "Using the following mount options:"
+echo " GNX_PATH = '$GNX_PATH'"
+echo " DISK = '$DISK'"
+echo " PART = '$PART'"
+
 #open gnx root up for editing
 if [ "$GNX_PATH" == "/" ]; then
 	# we are running from the guinnux root so don't do any special mounting/unmounting
@@ -155,9 +191,19 @@ else
 	   echo "Error: $GNX_PATH is already a mountpoint, cannot continue" 1>&2
 	   exit 1
     fi
-    mount -t ext4 "$PART" "$GNX_PATH" 1>/dev/null
+    ls -l $PART
+    mount $root_type $root_opts $PART $GNX_PATH 1>/dev/null
     if [ "$?" != "0" ]; then
 	   echo "Error: Failed to mount $PART on $GNX_PATH" 1>&2
+	 	exit 1	 
+    fi
+    if [ ! -z $boot ]; then
+    	mkdir -p $GNX_PATH/boot
+    	mount $boot_type $boot_opts $boot $GNX_PATH/boot
+    	if [ "$?" != "0" ]; then
+	 	echo "Error: Boot partition Mount error $?" 1>&2 
+	    exit 1
+        fi
     fi
     mkdir -p $GNX_PATH/dev
     mkdir -p $GNX_PATH/proc
