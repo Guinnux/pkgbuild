@@ -87,7 +87,13 @@ fi;
 
 if [ ! -z $GNX_WAN ]; then
 	echo "Install WAN Interface"
-	setup_iface  $GNX_WAN "192.168.1.100" "255.255.255.0" "192.168.1.1" >> $NETHOME/$INTERFACES
+	echo "#begin $GNX_WAN" >> $NETHOME/$INTERFACES
+	echo "auto $GNX_WAN" >> $NETHOME/$INTERFACES
+	echo "iface $GNX_WAN inet dhcp" >> $NETHOME/$INTERFACES
+	echo "  #address 192.168.1.100" >> $NETHOME/$INTERFACES
+	echo "  #netmask 255.255.255.0" >> $NETHOME/$INTERFACES
+	echo "  #gateway "192.168.1.1 >> $NETHOME/$INTERFACES
+	echo "#end $GNX_WAN" >> $NETHOME/$INTERFACES
 	echo >> $NETHOME/$INTERFACES 
 	BOOTIF="$BOOTIF $GNX_WAN"
 	

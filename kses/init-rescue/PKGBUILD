@@ -2,7 +2,7 @@
 # Maintainer: KSES <guinnux@kses.net>
 
 pkgname=init-rescue
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="The Init script for the rescue image"
 arch=('any')
@@ -17,7 +17,7 @@ source=('init'
         
 md5sums=('6ea9f9532d9cfb3eba04d20df074c8df'
          'dd3465899fdb7d8ad88e6554ab6177e5'
-         '5fc13198dbd57b4a09a652aaad4e5aa4'
+         '266d63f69604c50438b567a2eb6869ee'
          '18aed1df882baee76ddca3e9e70748b9'
          '11430f9e5f552619f7f22aeee95c426f')
  
