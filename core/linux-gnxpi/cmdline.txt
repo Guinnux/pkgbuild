@@ -1,1 +1,1 @@
-dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait quiet
+dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/mmcblk0p10 rw rootfstype=ext4 root_type=ext4 root_opts=data=journal elevator=deadline fsck.repair=yes rootwait rescue=/dev/mmcblk0p9 rescue_type=ext4 boot=/dev/mmcblk0p8 boot_type=vfat

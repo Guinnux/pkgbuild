@@ -9,27 +9,30 @@ _branch=rpi-4.4.y
 _kernelname=${pkgbase#linux}
 _desc="Guinnux Pi"
 _srcname=raspberrypi-linux-*
-pkgver=4.4.16
-pkgrel=2
+_fwsrcname=raspberrypi-firmware-*
+pkgver=4.4.21
+pkgrel=1
 arch=('arm')
 url="http://www.kernel.org/"
 license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'git')
 options=('!strip')
 source=("${_branch}.tar.gz::https://github.com/raspberrypi/linux/tarball/${_branch}"
+"firmware.tar.gz::https://github.com/raspberrypi/firmware/tarball/master"
 	"git+http://gitlab.kses.net/guinnux/kernel-patches.git"
 	"git+http://gitlab.kses.net/guinnux/initramfs.git#branch=pacman_gen"
-        "gnxpi-arm.config"
+    "gnxpi-arm.config"
 	"linux-gnxpi.install"
 	"config.txt"
 	"cmdline.txt")
-md5sums=('SKIP'
+md5sums=('c35e6870c793fb271201bab767881110'
+         'cc8afc1ed80dab32f4463e5eb5db2650'
          'SKIP'
          'SKIP'
-         'SKIP'
-         'SKIP'
-	 'SKIP'
-	 'SKIP')
+         'b87141807db1a7622a631b08042165e9'
+         'b0360355ab153af5401bcec92a706ab5'
+         'ae84079c2cac77aedc0e9adfef0873e4'
+         '1a7272fdd2f7df17b4567b7c4c7cb253')
 
 pkgver() {
   cd ${srcdir}/${_srcname}
@@ -56,6 +59,9 @@ prepare() {
   patch -p0 -i "${srcdir}/kernel-patches/phy-build.patch"
   patch -p0 -i "${srcdir}/kernel-patches/gnxio-build.patch"
   patch -p0 -i "${srcdir}/kernel-patches/dp83848_led.patch"
+  patch -p0 -i "${srcdir}/kernel-patches/gnxpi-overlay.patch"
+ 
+  cp -dvR ${srcdir}/kernel-patches/*/ .
 
   msg "Prepare to build"
   cat "${srcdir}/gnxpi-${CARCH}.config" > ./.config
@@ -70,7 +76,7 @@ build() {
   KARCH=arm
   
   msg "Preparing with $CHOST"
-  make ARCH=$KARCH CROSS_COMPILE=${CHOST}- prepare
+  #make ARCH=$KARCH CROSS_COMPILE=${CHOST}- prepare
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
@@ -78,11 +84,13 @@ build() {
   #make nconfig # new CLI menu for configuration
   #make xconfig # X-based configuration
   #make oldconfig # using old config from previous kernel version
-  #make bcmrpi_defconfig # using RPi defconfig
+#make ARCH=$KARCH CROSS_COMPILE=${CHOST}- bcmrpi_defconfig # using RPi defconfig
+#make ARCH=$KARCH CROSS_COMPILE=${CHOST}- bcm2709_defconfig
+#make ARCH=$KARCH CROSS_COMPILE=${CHOST}- menuconfig 
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
-  #cp ./.config ../${pkgver}.config
+  cp ./.config ../${pkgver}.config
 
   ####################
   # stop here
@@ -94,7 +102,7 @@ build() {
   #yes "" | make config
 
   msg "Building!"
-  make ARCH=$KARCH CROSS_COMPILE=${CHOST}- ${MAKEFLAGS} zImage modules dtbs
+make ARCH=$KARCH CROSS_COMPILE=${CHOST}- -j8 ${MAKEFLAGS} zImage modules dtbs
 }
 
 _package() {
@@ -154,7 +162,9 @@ _package() {
 
   msg2 "Install RaspberryPi boot files"
   # install boot files
-  install -m644 ../config.txt ../cmdline.txt "${pkgdir}/boot"
+install -m644 ${srcdir}/config.txt ${srcdir}/cmdline.txt "${pkgdir}/boot"
+install -m644 ${srcdir}/${_fwsrcname}/boot/bootcode.bin ${srcdir}/${_fwsrcname}/boot/fixup.dat  ${srcdir}/${_fwsrcname}/boot/start.elf "${pkgdir}/boot"
+install -m644 ${srcdir}/${_fwsrcname}/boot/LICENCE.broadcom "${pkgdir}/boot"
 }
 
 _package-headers() {
