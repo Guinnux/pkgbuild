@@ -197,14 +197,16 @@ else
 	   echo "Error: Failed to mount $PART on $GNX_PATH" 1>&2
 	 	exit 1	 
     fi
-    if [ ! -z $boot ]; then
-    	mkdir -p $GNX_PATH/boot
-    	mount $boot_type $boot_opts $boot $GNX_PATH/boot
-    	if [ "$?" != "0" ]; then
-	 	echo "Error: Boot partition Mount error $?" 1>&2 
-	    exit 1
-        fi
-    fi
+    
+    #if [ ! -z $boot ]; then
+    #	mkdir -p $GNX_PATH/boot
+    # 	mount $boot_type $boot_opts $boot $GNX_PATH/boot
+    #	if [ "$?" != "0" ]; then
+	# 	echo "Error: Boot partition Mount error $?" 1>&2 
+	#    exit 1
+    #    fi
+    #fi
+    
     mkdir -p $GNX_PATH/dev
     mkdir -p $GNX_PATH/proc
     mkdir -p $GNX_PATH/sys
