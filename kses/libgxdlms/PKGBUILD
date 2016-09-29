@@ -1,31 +1,18 @@
 pkgname=libgxdlms
 pkgver=0.0.1
-pkgrel=1
-pkgdesc="he Gurux DLMS C++ Library"
+pkgrel=2
+pkgdesc="The Gurux DLMS C++ Library"
 arch=('i686' 'x86_64')
 license=('LGPL')
 url="http://www.guinnux.org"
-source=('libgxdlms::git+http://gitlab.kses.net/rsm/libgxdlms.git')
-md5sums=('SKIP')
+source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${pkgver}.tar.gz")
+md5sums=('b0622ad6c1e2ad025540b6ea4aefed56')
 
 options=('strip' '!staticlibs')
 
-
-pkgver()
-{
-
-  cd $srcdir/$pkgname
-
-  autoreconf -fi > /dev/null
-  
-  readarray -t lines <<<"$(./configure --version)"
-  versionarray=(${lines[0]// / })
-  echo ${versionarray[2]}
-}
-
 build()
 {
-  cd $srcdir/$pkgname
+  cd $srcdir/$pkgname-$pkgver
   ./configure --host=$CHOST \
               --prefix=/usr 
               
@@ -34,6 +21,6 @@ build()
 
 package()
 {
-  cd $srcdir/$pkgname
+  cd $srcdir/$pkgname-$pkgver
   make DESTDIR=$pkgdir install
 }
