@@ -1,0 +1,32 @@
+
+pkgname=nlohmann-json
+pkgver=v1.1.0
+pkgrel=4
+pkgdesc="JSON for Modern C++"
+arch=('any')
+url="https://github.com/nlohmann/json"
+license=('MIT')
+groups=()
+depends=('')
+makedepends=('git cmake')
+source=("https://github.com/nlohmann/json/archive/${pkgver}.tar.gz"
+         'nlohmann_json.pc'
+         'NlohmannJsonConfig.cmake'
+)
+md5sums=('SKIP'
+         'SKIP'
+         'SKIP'
+)
+
+prepare() {
+	cd "$srcdir/"
+	tar -xf ${pkgver}.tar.gz
+}
+
+package() {
+	cd "${srcdir}"
+
+  install -v -Dm644 "./json-${pkgver[@]:1}/src/json.hpp" "${pkgdir}/usr/include/nlohmann-json/json.hpp"
+  install -v -Dm644 "./nlohmann_json.pc" "${pkgdir}/usr/lib/pkgconfig/nlohmann_json.pc"
+  install -v -Dm644 "./NlohmannJsonConfig.cmake" "${pkgdir}/usr/lib/cmake/NlohmannJson/NlohmannJsonConfig.cmake"
+}
