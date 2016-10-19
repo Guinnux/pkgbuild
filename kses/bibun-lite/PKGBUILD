@@ -1,0 +1,27 @@
+_version=1.1.1
+
+pkgname=bibun-lite
+pkgver=v${_version} # Has to be a name of a tag in the git repo.
+pkgrel=1
+pkgdesc="C++98 friendly, lightweight Bibun Client library"
+arch=('i686' 'x86_64' 'arm')
+url="http://gitlab.kses.net/guinnux-apps/bibun-lite"
+license=('closed')
+groups=()
+depends=('bibun')
+options=('!strip')
+source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${_version}.tar.gz")
+md5sums=('a81afbcb7d61cfa085dee71f3c183ebd')
+
+build() {
+  cd "$srcdir/${pkgname}-${_version}"
+  mkdir -p build
+  cd build
+  "../configure" --host=$CHOST --prefix=/usr --disable-static
+  make
+}
+
+package() {
+  cd "$srcdir/${pkgname}-${_version}/build"
+  make DESTDIR="$pkgdir" install-strip
+}
