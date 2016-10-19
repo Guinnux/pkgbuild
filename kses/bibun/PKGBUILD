@@ -1,0 +1,30 @@
+_version=0.7.4
+
+pkgname=bibun
+pkgver=v${_version} # Has to be a name of a tag in the git repo.
+pkgrel=1
+pkgdesc="The GuBinBus framework, a set of libraries and server applications providing the means of robust communications."
+arch=('arm')
+url="http://gitlab.kses.net/guinnux-apps/bibun"
+license=('closed')
+groups=()
+options=('!strip')
+depends=('zeromq')
+makedepends=('git' 'cmake' 'nlohmann-json')
+source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${_version}.tar.gz"
+  "arm-toolchain.cmake"
+)
+md5sums=('3d0d4f31c0ec516600225068499f1bcf' 'SKIP')
+
+build() {
+  cd "$srcdir/"
+  mkdir -p build
+  cd build
+  cmake -DCMAKE_TOOLCHAIN_FILE="$srcdir/arm-toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr "../$pkgname-${_version}"
+  make
+}
+
+package() {
+  cd "$srcdir/build"
+  make DESTDIR="$pkgdir" install/strip
+}
