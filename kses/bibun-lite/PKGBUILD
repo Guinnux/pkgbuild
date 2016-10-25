@@ -1,4 +1,4 @@
-_version=1.1.1
+_version=1.1.2
 
 pkgname=bibun-lite
 pkgver=v${_version} # Has to be a name of a tag in the git repo.
@@ -11,7 +11,7 @@ groups=()
 depends=('bibun')
 options=('!strip')
 source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${_version}.tar.gz")
-md5sums=('a81afbcb7d61cfa085dee71f3c183ebd')
+md5sums=('ee526803bd830ffa1adf6a8268c1dc47')
 
 build() {
   cd "$srcdir/${pkgname}-${_version}"
