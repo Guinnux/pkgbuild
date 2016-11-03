@@ -4,9 +4,9 @@
 
 pkgname=ntp
 _pkgname=ntp #-dev
-_pkgver=4.2.8p4
+_pkgver=4.2.8p8
 pkgver=${_pkgver/p/.p}
-pkgrel=1
+pkgrel=2
 pkgdesc='Network Time Protocol reference implementation'
 url='http://www.ntp.org/'
 groups=('base')
@@ -19,13 +19,19 @@ source=("https://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/${_pkgname}-${_p
         'ntpd.service'
         'ntpdate.service')
 
-sha1sums=('a30f61f87b219ab3613def9e27f5c8e91ce38b0a'
+sha1sums=('208ae3e2ce1237ad684c3bc818b6314d28636e46'
           '7ef26f4bc4e2b208e1191fc6913d1d3485e7a0d8'
           '0cccca872385e0142888ab48d273fec0669b30a8'
           '059b382d1af0c55202e2d17f2ae065a2cbfec9ee')
 
 options=('!emptydirs')
 install=install
+
+prepare(){
+	cd "${srcdir}/${_pkgname}-${_pkgver}"
+    autoreconf -fi
+}
+
 
 build() {
 	cd "${srcdir}/${_pkgname}-${_pkgver}"
