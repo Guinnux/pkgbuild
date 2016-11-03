@@ -30,6 +30,11 @@ if [ $CNT -gt 0 ]; then
    sed -i 's/linux-guinnux/linux-gnxpi-one/g' $PKG_LIST
 fi
 
+CNT=$(gnxid -l|grep -c "LS1043A RDB")
+if [ $CNT -gt 0 ]; then
+   echo "This is an NXP LS1043A RDB. Adjusting package list"
+   sed -i 's/linux-guinnux/linux-gnx-qoriq/g' $PKG_LIST
+fi
 
 PACMAN_CMD="pacman --cachedir $GNX_PATH/var/cache/pacman/pkg -r $GNX_PATH"
 PACKAGES=$(cat $PKG_LIST)
