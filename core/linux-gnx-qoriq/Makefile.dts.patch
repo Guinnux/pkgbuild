@@ -1,0 +1,9 @@
+--- arch/arm64/boot/dts/freescale/Makefile	2016-09-23 11:45:39.000000000 +0200
++++ arch/arm64/boot/dts/freescale/Makefile.dts.new	2016-10-31 13:44:58.614781453 +0200
+@@ -1,5 +1,5 @@
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls2080a-simu.dtb fsl-ls2080a-qds.dtb fsl-ls2080a-rdb.dtb \
+-				fsl-ls1043a-rdb.dtb fsl-ls1043a-qds.dtb fsl-ls1043a-uefi-rdb.dtb
++				fsl-ls1043a-rdb.dtb fsl-ls1043a-rdb-gnx.dtb fsl-ls1043a-qds.dtb fsl-ls1043a-uefi-rdb.dtb
+  
+ always		:= $(dtb-y)
+ subdir-y	:= $(dts-dirs)

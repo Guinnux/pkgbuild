@@ -1,0 +1,34 @@
+# arg 1:  the new package version
+# arg 2:  the old package version
+
+KERNEL_NAME=gnx-qoriq
+KERNEL_VERSION=4.1.30-rt34
+
+check_links()
+{
+  cat <<EOF > /tmp/linux-links.sh
+  ln -svf /boot/kernel-${KERNEL_VERSION}.itb /boot/kernel.itb
+     
+EOF
+
+  gnxid -s /tmp/linux-links.sh
+}
+
+
+
+post_install () {
+  # updating module dependencies
+  echo ">>> Updating module dependencies. Please wait ..."
+  depmod ${KERNEL_VERSION}
+  echo ">>> Checking kernel boot links Please wait ..."
+  check_links 
+}
+
+post_upgrade() {
+  # updating module dependencies
+  echo ">>> Updating module dependencies. Please wait ..."
+  depmod ${KERNEL_VERSION}
+  echo ">>> Checking kernel boot links Please wait ..."
+  check_links
+  
+}
