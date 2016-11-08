@@ -1,5 +1,5 @@
 pkgname=gnx-installer
-pkgver=3.3
+pkgver=3.4
 pkgrel=1
 pkgdesc="Guinnux Installer Scripts"
 arch=('any')
@@ -13,7 +13,7 @@ source=('setup'
         'root.bashrc'
         'pkglist')
 
-md5sums=('ab41e6ff2549253a628b3cc050d4c69f'
+md5sums=('8e761b6a250eed5587bdf35109b03e0e'
          'ee2e49b1a76473242f3a8b3cdbb38751'
          '6ebcfa87b05a7e60cf66ec5cbba7e7fe'
          'eec3bb758a9c06cf1265077f7cef8c25'

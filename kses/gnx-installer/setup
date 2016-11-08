@@ -95,12 +95,37 @@ echo " boot_type = '$boot_type'"
 echo " boot_opts = '$boot_opts'"
 fi
 
-PART=$root
+echo "${txtbld}${txtblue}Figuring out disk geometry based on the kernel cmdline...${txtreset}"
+
+set -- `ls /sys/block`
+i=0
+for block; do 
+CNT=$(echo $root|grep -c $block)
+if [ $CNT -gt 0 ]; then
+	DISK="/dev/$block"
+	PART=$root
+fi
+ i=$(($i + 1))
+done
+
 if [ -z $DISK ]; then
-	DISK="/dev/mmcblk0"
+echo "Could not find the disk that goes with partition $root"
+echo "Please make sure the device is inserted" 
+exit 1
 fi
 
-if [ -e $root ]; then
+# establish GNX_PATH
+if [ -z "$GNX_PATH" ]; then
+	GNX_PATH="/mnt/gnx"
+fi
+
+echo "Using the following mount options:"
+echo " GNX_PATH = '$GNX_PATH'"
+echo " DISK = '$DISK'"
+echo " PART = '$PART'"
+
+
+if [ -e $PART ]; then
     echo "The root partition already exists. Will just format the filesystem."
 else
 	echo "The root partion does not exist. Will have to create a new partition table"

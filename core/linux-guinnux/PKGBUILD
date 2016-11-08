@@ -27,7 +27,7 @@ md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
          'a85c5e50e93b35d4b5fad5827dbd8dac'
-         'e6060e683daaa65f24c8790939dfe9b8')
+         '4c0f9fd82a43ab5c259dee959ec4b85d')
         
 prepare() {
   
@@ -69,7 +69,7 @@ fi
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
-  make  ARCH=$KARCH CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
+  #make  ARCH=$KARCH CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
@@ -123,7 +123,7 @@ cp  arch/$KARCH/boot/$IMAGE ${pkgdir}/boot/$IMAGE-${_kernver}
   mv arch/$KARCH/boot/dts/*/*.dtb "${pkgdir}/boot"
  else
 	if [ -e  arch/$KARCH/boot/dts/overlays ] ; then
-         mv arch/$KARCH/boot/dts/overlays/*.dtb "${pkgdir}/boot/overlays"
+         mv arch/$KARCH/boot/dts/overlays/*.dtb "${pkgdir}/boot/overlays" || true
     fi
     mv arch/$KARCH/boot/dts/*.dtb "${pkgdir}/boot"
  fi
@@ -135,7 +135,6 @@ cp  arch/$KARCH/boot/$IMAGE ${pkgdir}/boot/$IMAGE-${_kernver}
     -e  "s/KERNEL_NAME=.*/KERNEL_NAME=${_kernelname}/g" \
     -e  "s/KERNEL_VERSION=.*/KERNEL_VERSION=${_kernver}/g" \
     -i "${startdir}/${pkgname}.install"
-
 
   msg2 "Massaging modules installtion"
   # remove build and source links
