@@ -19,14 +19,15 @@ sha1sums=('57f90778a9bb7b95a7fd73910fd41894f3ee9cab')
 
 build() {
   cd nanomsg-$pkgver
+  export CC=$CHOST-gcc
   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib .
   make
 }
 
-check() {
-  cd nanomsg-$pkgver
-  ctest
-}
+# check() {
+#   cd nanomsg-$pkgver
+#   ctest
+# }
 
 package() {
   cd nanomsg-$pkgver
