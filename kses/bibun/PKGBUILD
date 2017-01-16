@@ -2,7 +2,7 @@ _version=0.7.4
 
 pkgname=bibun
 pkgver=v${_version} # Has to be a name of a tag in the git repo.
-pkgrel=2
+pkgrel=4
 pkgdesc="The GuBinBus framework, a set of libraries and server applications providing the means of robust communications."
 arch=('arm')
 url="http://gitlab.kses.net/guinnux-apps/bibun"
@@ -13,9 +13,8 @@ depends=('zeromq' 'cronie')
 makedepends=('git' 'cmake' 'nlohmann-json')
 source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${_version}.tar.gz"
   "arm-toolchain.cmake"
-  "bibun-reset.sh"
 )
-md5sums=('3d0d4f31c0ec516600225068499f1bcf' 'SKIP' '6cfe657f649a9bbec77ba8a1a7c19b70')
+md5sums=('3d0d4f31c0ec516600225068499f1bcf' 'SKIP')
 
 build() {
   cd "$srcdir/"
@@ -28,5 +27,4 @@ build() {
 package() {
   cd "$srcdir/build"
   make DESTDIR="$pkgdir" install/strip
-  install -D -m0755 "$srcdir/bibun-reset.sh" "$pkgdir/etc/cron.hourly/bibun-reset"
 }
