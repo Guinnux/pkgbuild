@@ -1,0 +1,17 @@
+--- configure.ac.orig	2016-12-13 10:30:01.468730444 +0200
++++ configure.ac	2016-12-13 10:30:41.282257999 +0200
+@@ -234,10 +234,10 @@
+         ARCH_MAX="s390x"
+         ;;
+ 
+-     armv7*)
+-	AC_MSG_RESULT([ok (${host_cpu})])
+-	ARCH_MAX="arm"
+-	;;
++     arm*)
++        AC_MSG_RESULT([ok (${host_cpu})])
++        ARCH_MAX="arm"
++        ;;
+ 
+      aarch64*)
+        AC_MSG_RESULT([ok (${host_cpu})])
