@@ -10,7 +10,7 @@ _srcname=linux-${_commit}
 _kernelname=${pkgbase#linux-}
 _desc="Guinnux"
 pkgver=4.4.1
-pkgrel=6
+pkgrel=7
 _srcname=linux-${pkgver}
 arch=('arm')
 url="http://www.kernel.org/"
@@ -26,7 +26,7 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${pkgver}.tar.xz"
 md5sums=('d27b1458acde6369cf9eaf956f402901'
          'SKIP'
          'SKIP'
-         'a85c5e50e93b35d4b5fad5827dbd8dac'
+         '34bed1463c22bd7c2c8180cd96ffc53d'
          '4c0f9fd82a43ab5c259dee959ec4b85d')
         
 prepare() {
@@ -69,7 +69,7 @@ fi
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
-  #make  ARCH=$KARCH CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
+  make  ARCH=$KARCH CROSS_COMPILER=${CHOST}- menuconfig # CLI menu for configuration
   # ... or manually edit .config
 
   # Copy back our configuration (use with new kernel version)
