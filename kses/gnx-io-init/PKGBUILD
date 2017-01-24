@@ -1,5 +1,5 @@
 pkgname=gnx-io-init
-pkgver=2.0.1
+pkgver=2.0.3
 pkgrel=1
 pkgdesc="Guinnux IO Initialisation Service"
 arch=('any')
@@ -7,15 +7,18 @@ license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
 depends=('gnxid' 'gnxio' 'lua')
-source=('git+http://gitlab.kses.net/guinnux-apps/gnx-io-init.git'
-        'hwinit@.service')
+install=gnx-io-init.install
+source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${pkgver}.tar.gz"
+        'hwinit@.service'
+        'qmi.conf')
         
-md5sums=('SKIP'
-         'a92b4cb765b3bb7cc826d2918765b1c0')
+md5sums=('506bf9510949373eece18ea97cff906b'
+         'a92b4cb765b3bb7cc826d2918765b1c0'
+         '0a257f2b992bf164aa240db63773e8bd')
         
 package()
 {
-  cd $srcdir/$pkgname
+cd $srcdir/$pkgname-$pkgver
   install -d -m0644 $pkgdir/etc/hwinit
   install -d -m0644  $pkgdir/usr/share/kses/hwinit
   install -d -m0644 $pkgdir
@@ -23,4 +26,5 @@ package()
   install -Dm0644 "$srcdir/hwinit@.service" "$pkgdir/usr/lib/systemd/system/hwinit@.service"
   cp ./hwscripts/* $pkgdir/usr/share/kses/hwinit/
   cp ./hwinit/* $pkgdir/etc/hwinit/
+  install -Dm0644 "$srcdir/qmi.conf"  "$pkgdir/etc/modules-load.d/qmi.conf"
 }

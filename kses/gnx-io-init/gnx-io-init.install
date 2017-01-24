@@ -1,0 +1,11 @@
+post_install()
+{
+  echo ">>> Reloading modules. Please wait ..."
+  systemctl restart systemd-modules-load
+}
+
+post_upgrade()
+{
+  echo ">>> Reloading modules. Please wait ..."
+  systemctl restart systemd-modules-load
+}
