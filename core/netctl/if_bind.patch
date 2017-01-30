@@ -1,0 +1,11 @@
+--- src/netctl.in	2017-01-30 13:12:14.968150019 +0200
++++ src/netctl.in.new	2017-01-30 13:19:39.070495984 +0200
+@@ -126,7 +126,7 @@
+         
+         echo -e "\n[Unit]" >> "$unit"
+         [[ -n $Description ]] && echo "Description=$Description" >> "$unit"
+-        declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=$Interface
++        declare -p BindsToInterfaces &> /dev/null || BindsToInterfaces=()
+        if (( ${#BindsToInterfaces[@]} )); then
+             : ${InterfaceRoot=sys/subsystem/net/devices/}
+             printf "BindsTo=$(sd_escape "$InterfaceRoot")%s.device\n" \

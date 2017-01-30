@@ -23,7 +23,8 @@ source=(https://sources.archlinux.org/other/packages/netctl/netctl-${pkgver}.tar
         'ppp-persistence.patch'
         'ppp.hwinit'
         'led-up.sh'
-        'led-down.sh')
+        'led-down.sh'
+        'if_bind.patch')
 
 
 
@@ -34,11 +35,13 @@ md5sums=('1465a0595af16fd88a5f1ecdcebc0f0c'
          '8618a3bd8d6ed9a3d0654ae060ae156c'
          '983dde79eb5c56c6a4ee848d7377adec'
          '95137643cb83bc8a6036ad8284cef1f4'
-         'b4e9731ec9c2adf6de1f3c05ac00b324')
+         'b4e9731ec9c2adf6de1f3c05ac00b324'
+         '8569c0099549332c71de85a235c758a9')
 
 prepare() {
 	cd "$srcdir/netctl-${pkgver}"
 	patch -p0 < "$srcdir/ppp-persistence.patch"
+	patch -p0 < "$srcdir/if_bind.patch"
 }                
 
 
