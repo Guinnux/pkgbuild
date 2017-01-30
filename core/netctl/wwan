@@ -1,0 +1,222 @@
+# WWAN connection support for netctl
+
+. "$SUBR_DIR/ip"
+
+qmi_load_state() {
+   echo "Loading previous state from $state_file..."
+
+    if [ -f $state_file ]; then
+        . $state_file
+
+        if [ "x$QMI_CID" != "x" ]; then
+            echo "    Previous CID: $QMI_CID"
+        fi
+        if [ "x$QMI_PDH" != "x" ]; then
+            echo "    Previous PDH: $QMI_PDH"
+        fi
+    fi
+}
+
+qmi_save_state ()
+{
+    KEY=$1
+    VAL=$2
+
+    report_notice "Saving state... ($KEY: $VAL)"
+
+    if [ -f $state_file ]; then
+        PREVIOUS=`cat $state_file`
+        PREVIOUS=`echo "$PREVIOUS" | grep -v $KEY`
+        if [ "x$PREVIOUS" != "x" ]; then
+            echo $PREVIOUS > $state_file
+        else
+            rm $state_file
+        fi
+    fi
+
+    if [ "x$VAL" != "x" ]; then
+        echo "$KEY=\"$VAL\"" >> $state_file
+    fi
+}
+
+qmi_clear_state (){
+    echo "Clearing state..."
+    rm -f $state_file
+}
+
+
+qmi_start_network() {
+  
+  state_dir="$STATE_DIR/wwan.$Interface.$Profile"
+  state_file="$state_dir/qmi-network-state"
+  mkdir -p "$state_dir"
+  
+  qmi_load_state
+  
+   if [ "x$QMI_CID" != "x" ]; then
+        local USE_PREVIOUS_CID="--client-cid=$QMI_CID"
+    fi
+
+    if [ "x$QMI_PDH" != "x" ]; then
+        echo "error: cannot re-start network, PDH already exists" 1>&2
+        exit 3
+    fi
+  
+  local connect_string="--wds-start-network=${AccessPointName:+$AccessPointName}${User:+,,$User}${Password:+,$Password} $USE_PREVIOUS_CID --client-no-release-cid"
+  
+  
+  report_notice "${AccessPointName:+APN $AccessPointName}"
+  report_notice "${User:+USER $User}"
+  report_notice "${Password:+PASSWORD $Password}"
+  report_notice "Conect String: ${connect_string}"
+  local qmicli_cmd="qmicli -d ${QMIDevice:=/dev/cdc-wdm0} ${connect_string}"
+  
+  report_notice "Starting QMI network with '$qmicli_cmd'" 
+  local qmicli_output=$($qmicli_cmd)
+  report_notice "$qmicli_output"
+  
+    # Save the new CID if we didn't use any before
+    if [ "x$QMI_CID" = "x" ]; then
+        QMI_CID=`echo "$qmicli_output" | sed -n "s/.*CID.*'\(.*\)'.*/\1/p"`
+        if [ "x$QMI_CID" = "x" ]; then
+            echo "error: network start failed, client not allocated" 1>&2
+            exit 1
+        else
+            qmi_save_state "QMI_CID" $QMI_CID
+        fi
+    fi
+   
+   QMI_PDH=`echo "$qmicli_output" | sed -n "s/.*handle.*'\(.*\)'.*/\1/p"`
+    if [ "x$QMI_PDH" = "x" ]; then
+        echo "error: network start failed, no packet data handle" 1>&2
+        # Cleanup the client
+        qmicli -d  "${QMIDevice:=/dev/cdc-wdm0}" --wds-noop --client-cid="$QMI_CID"
+        qmi_clear_state
+        exit 2
+    else
+        qmi_save_state "QMI_PDH" $QMI_PDH
+    fi
+   
+
+  report_notice "QMI Network started successfully"
+}
+
+
+qmi_stop_network() {
+    report_notice "Stopping QMI .. "
+    state_dir="$STATE_DIR/wwan.$Interface.$Profile"
+    state_file="$state_dir/qmi-network-state"
+  
+    qmi_load_state
+
+    if [ "x$QMI_CID" = "x" ]; then
+        report_notice "QMI Network already stopped"
+    elif [ "x$QMI_PDH" = "x" ]; then
+        report_notice "Network already stopped; need to cleanup CID $QMI_CID"
+        # Cleanup the client
+        qmicli -d "${QMIDevice:=/dev/cdc-wdm0}" --wds-noop --client-cid="$QMI_CID"
+    else
+        local qmicli_cmd="qmicli -d ${QMIDevice:=/dev/cdc-wdm0} --wds-stop-network=$QMI_PDH --client-cid=$QMI_CID"
+        report_notice "Stopping network with '$qmicli_cmd'..."
+
+        local qmicli_output=$($qmicli_cmd)
+
+        report_notice "$qmicli_output"
+        report_notice "Network stopped successfully"
+    fi
+
+    qmi_clear_state
+
+}
+
+
+wwan_up() {
+    
+    if ! ( eval $ExecUpPre ); then
+       report_error "ExecUpPre failed for network profile '$Profile'"
+       return 1
+    fi
+    
+    
+    report_notice "Starting WWAN inteface '$Interface' "
+    if ! is_interface "$Interface"; then
+        report_error "Interface '$Interface' does not exist"
+        return 1
+    fi
+
+    # Disable IPv6 before bringing the interface up to prevent SLAAC
+    if [[ $IP6 == "no" ]]; then
+        sysctl -q -w "net.ipv6.conf.${Interface/.//}.disable_ipv6=1"
+    fi
+
+    if ! qmi_start_network ; then
+        report_error "Failed to start QMI networking for '$Interface'"
+        return 1
+    fi
+    
+    if ! bring_interface_up "$Interface"; then
+        report_error "Failed to bring interface '$Interface' up"
+        return 1
+    fi
+
+    if is_yes "${SkipNoCarrier:-no}"; then
+        SkipDAD=yes
+    else
+        # Some cards are plain slow to come up. Don't fail immediately.
+        if ! timeout_wait "${TimeoutCarrier:-5}" '(( $(< "/sys/class/net/$Interface/carrier") ))'; then
+            report_error "No connection found on interface '$Interface' (timeout)"
+            bring_interface_down "$Interface"
+            return 1
+        fi
+    fi
+
+
+    if is_yes "${Auth8021X:-no}"; then
+        . "$SUBR_DIR/wpa"
+        : ${WPAConfigFile:=/etc/wpa_supplicant.conf}
+        : ${WPADriver:=wired}
+        : ${TimeoutWPA:=15}
+
+        if ! wpa_start "$Interface" "$WPADriver" "$WPAConfigFile"; then
+            report_error "The WPA supplicant did not start for interface '$Interface'"
+            bring_interface_down "$Interface"
+            return 1
+        fi
+
+        if ! wpa_wait_until_state "$TimeoutWPA" "$Interface" "ASSOCIATED"; then
+            wpa_stop "$Interface"
+            bring_interface_down "$Interface"
+            report_error "WPA Authentication/Association Failed"
+            return 1
+        fi
+    fi
+
+    if ! ip_set; then
+        stop_8021x
+        bring_interface_down "$Interface"
+        return 1
+    fi
+}
+
+wwan_down() {
+     report_notice "Stopping WWAN inteface '$Interface' "
+    ip_unset
+    stop_8021x
+    bring_interface_down "$Interface"
+    qmi_stop_network
+    if ! ( eval $ExecDownPost ); then
+       report_error "ExecDownPost failed for network profile '$Profile'"
+    fi
+}
+
+# Stop wpa_supplicant if neccessary
+stop_8021x() {
+    if is_yes "${Auth8021X:-no}"; then
+        . "$SUBR_DIR/wpa"
+        : ${WPAConfigFile:=/etc/wpa_supplicant.conf}
+        do_debug wpa_stop "$Interface"
+    fi
+}
+
+
+# vim: ft=sh ts=4 et sw=4:
