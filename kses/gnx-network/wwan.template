@@ -1,0 +1,20 @@
+Description='GSM WWAN ethernet connection'
+Interface=wwan0
+
+#VLANID=3
+
+
+ExecUpPre='hwctl init sim5320'
+ExecUpPost='gnxio set LED_GSM_RED high && gnxio set LED_GSM_GREEN low'
+ExecDownPost='gnxio set LED_GSM_RED low && gnxio set LED_GSM_GREEN low'
+SkipNoCarrier=yes
+
+#QMIDevice=/dev/cdc-wdm0
+#AccessPointName='internet'
+#User='user'
+#Password='secret'
+
+Connection=wwan
+IP=dhcp
+Address=('192.168.1.100/24')
+Gateway='192.168.1.1'

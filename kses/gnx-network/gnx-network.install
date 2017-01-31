@@ -89,9 +89,18 @@ generate_gsm()
 		sed -i s%Interface=.*%Interface=\${cfg_if}% /etc/netctl/gsm
 		echo "#!/usr/bin/sh" > /etc/netctl/options/gsm.hwinit
 		echo "hwctl init \${cfg[1]}" >> /etc/netctl/options/gsm.hwinit
+		if [ -v GNX_WWAN ]; then
+         	echo "GSM on \$GNX_WWAN"
+  		    sed -i s%Interface=.*%Interface=\$GNX_WWAN% /etc/netctl/wwan
+  		    sed -i s%ExecUpPre=.*%ExecUpPre="'hwctl init \${cfg[1]}'"% /etc/netctl/wwan
+		else
+		    rm 	/etc/netctl/wwan
+		fi
 	else
 	    rm 	/etc/netctl/gsm
+	    rm 	/etc/netctl/wwan
 	fi
+	
 	
 }
 
