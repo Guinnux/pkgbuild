@@ -27,8 +27,6 @@ source=(https://sources.archlinux.org/other/packages/netctl/netctl-${pkgver}.tar
         'if_bind.patch'
         'wwan')
 
-
-
 arch=('any')
 
 md5sums=('1465a0595af16fd88a5f1ecdcebc0f0c'
