@@ -1,5 +1,5 @@
 pkgname=webconfig-base
-pkgver=2.9.0
+pkgver=2.9.1
 pkgrel=1
 pkgdesc="Guinnux webconfig base"
 arch=('any')
@@ -7,15 +7,15 @@ license=('GPL')
 url="http://www.guinnux.org"
 groups=('base')
 depends=('lua' 'lighttpd' 'lsqlite3' 'lua-filesystem')
-source=(webconfig-base::git+http://gitlab.kses.net/guinnux-apps/${pkgname}.git#tag=v${pkgver})
+source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${pkgver}.tar.gz")
       
-md5sums=('SKIP')
+md5sums=('eff13bba985de613f11207da256d7679')
 
 
 
 package()
 {
-cd $srcdir/$pkgname
+cd "$srcdir/${pkgname}-${pkgver}"
 cp -dvR ./srv "$pkgdir"/
   
 }
