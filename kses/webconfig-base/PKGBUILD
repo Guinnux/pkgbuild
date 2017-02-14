@@ -1,5 +1,5 @@
 pkgname=webconfig-base
-pkgver=2.9.1
+pkgver=2.9.2
 pkgrel=1
 pkgdesc="Guinnux webconfig base"
 arch=('any')
@@ -9,7 +9,7 @@ groups=('base')
 depends=('lua' 'lighttpd' 'lsqlite3' 'lua-filesystem')
 source=("ftp://selene/pub/release/Guinnux%20Apps/${pkgname}-${pkgver}.tar.gz")
       
-md5sums=('eff13bba985de613f11207da256d7679')
+md5sums=('e03938c00693939741664cc915b8ded6')
 
 
 
